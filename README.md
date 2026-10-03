@@ -1,9 +1,11 @@
 # WG Gefunden! (wgg)
 
-*Found your next WG, before everyone else.* The CLI and package are called `wgg`.
+*Find your WG, before everyone else.* The CLI and package are called `wgg`.
 
 A private WG-Gesucht monitor: scrapes configured WG-Gesucht search result pages, stores new
-listings in SQLite and (in later phases) scores and notifies. Private project, not for redistribution.
+listings in SQLite and (in later phases) scores and notifies. 
+
+My wgg page runs at wgg.léo.com. With this repo you can host this on your own :)
 
 ## Setup
 
