@@ -158,6 +158,65 @@ describe('#bulk alert', () => {
   });
 });
 
+describe('#separate switches for Fantastic and Good', () => {
+  const saveTiers = (priority, bulk) => {
+    const { directory } = makeDirectory();
+    const n = directory.settings(USER).notify;
+    saveSettings(USER, {
+      ...directory.settings(USER),
+      notify: { ...n, priority: { ...n.priority, ...priority }, bulk: { ...n.bulk, ...bulk } },
+    });
+  };
+
+  it('Fantastic off: no priority mail, fantastic listings are not moved into the digest, nothing is marked', async () => {
+    seedAssessed(1, { overall: 9, fit: 9 });
+    seedAssessed(2, { overall: 6, fit: 6 });
+    saveTiers({ enabled: false }, {});
+    const { notifier, sent } = setup();
+    expect(await notifier.notifyPriority(USER, '1')).toMatchObject({ sent: 0 });
+    const r = await notifier.notifyPending({ idle: true });
+    expect(r).toMatchObject({ priority: 0, bulk: 1 });
+    expect(sent.map((m) => m.subject)).toEqual(['1 good offer — WG Gefunden!']);
+    expect(kind(1)).toBeNull();
+    expect(kind(2)).toBe('bulk');
+  });
+
+  it('Good off: Fantastic still mails immediately, no digest, nothing marked', async () => {
+    seedAssessed(1, { overall: 9, fit: 9 });
+    seedAssessed(2, { overall: 6, fit: 6 });
+    saveTiers({}, { enabled: false });
+    const { notifier, sent } = setup();
+    const r = await notifier.notifyPending({ idle: true });
+    expect(r).toMatchObject({ priority: 1, bulk: 0 });
+    expect(sent).toHaveLength(1);
+    expect(kind(1)).toBe('priority');
+    expect(kind(2)).toBeNull();
+  });
+
+  it('turning a switch back on mails what is still within maxAgeHours', async () => {
+    seedAssessed(1, { overall: 9, fit: 9 });
+    saveTiers({ enabled: false }, {});
+    await setup().notifier.notifyPending({ idle: true });
+    saveTiers({ enabled: true }, {});
+    const { notifier, sent } = setup();
+    await notifier.notifyPending({ idle: true });
+    expect(sent).toHaveLength(1);
+    expect(kind(1)).toBe('priority');
+  });
+
+  it('users without the keys (saved before the switches existed) keep both alerts', async () => {
+    seedAssessed(1, { overall: 9, fit: 9 });
+    const { directory } = makeDirectory();
+    const stored = directory.settings(USER);
+    delete stored.notify.priority.enabled;
+    delete stored.notify.bulk.enabled;
+    saveSettings(USER, stored);
+    const { notifier, sent } = setup();
+    await notifier.notifyPending({ idle: true });
+    expect(sent).toHaveLength(1);
+  });
+});
+
 describe('#failures and dry run', () => {
   it('releases the listing when sending fails, stores the error, and retries on the next trigger', async () => {
     seedAssessed(1);

@@ -29,8 +29,8 @@ describe('#user settings defaults', () => {
     expect(s.notify).toEqual({
       email: 'leo@example.org',
       enabled: true,
-      priority: { rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }] },
-      bulk: { rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }] },
+      priority: { enabled: true, rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }] },
+      bulk: { enabled: true, rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }] },
       maxAgeHours: 24,
     });
   });

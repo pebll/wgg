@@ -99,6 +99,17 @@ describe('#validateSettingsUpdate', () => {
       });
     });
 
+    it('accepts the per-tier switches, defaulting to on, and rejects non-booleans', () => {
+      expect(current().notify.priority.enabled).toBe(true);
+      const next = update({ notify: { priority: { enabled: false } } }).notify;
+      expect(next.priority.enabled).toBe(false);
+      expect(next.priority.rules).toEqual(current().notify.priority.rules);
+      expect(next.bulk.enabled).toBe(true);
+      expect(update({ notify: { bulk: { enabled: false } } }).notify.bulk.enabled).toBe(false);
+      fails({ notify: { priority: { enabled: 'no' } } }, /notify\.priority\.enabled must be true or false/);
+      fails({ notify: { bulk: { enabled: 1 } } }, /notify\.bulk\.enabled must be true or false/);
+    });
+
     it('validates alert rules like the config does: fields, operators, numbers', () => {
       const next = update({
         notify: { priority: { rules: [{ overall: { gt: 8 }, ai: { gte: 7 } }] }, bulk: { rules: [] } },

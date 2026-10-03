@@ -6,14 +6,28 @@ import { formatRetryAfter } from '../../services/format.js';
 import { TierLabel } from '../TierBadge.jsx';
 import { notifyBody, notifyToForm, validateNotifyForm } from '../../services/options.js';
 
-function Thresholds({ tier, label, title, hint, value, onChange }) {
+/** The switch row of one tier: a tier that is off sends no mail, but its thresholds still define the tier filter. */
+function TierHeader({ tier, label, title, enabled, onToggle }) {
   return (
-    <div className="options__group">
+    <div className="options__inline">
       <strong>
         <TierLabel tier={tier}>{title}</TierLabel>
       </strong>
+      <Switch checked={enabled} onChange={onToggle} aria-label={`${label} alerts enabled`} />
+    </div>
+  );
+}
+
+function Thresholds({ label, hint, enabled, value, onChange }) {
+  return (
+    <div className="options__group">
       <div className="options__hint">{hint}</div>
-      <div className="options__row options__row--compact">
+      {enabled ? null : (
+        <div className="options__hint">
+          Still used for the {label} filter, but no {label} emails are sent.
+        </div>
+      )}
+      <div className={`options__row options__row--compact${enabled ? '' : ' options__muted'}`}>
         <Field label="Score >">
           <InputNumber
             value={value.score ?? ''}
@@ -108,17 +122,23 @@ export default function NotificationsSection({ settings, defaults, save }) {
       }
     >
       <label className="options__inline">
-        Alerts enabled
+        All email alerts
         <Switch checked={form.enabled} onChange={(enabled) => set({ enabled })} aria-label="Alerts enabled" />
       </label>
       <Field label="Notification email" hint="The test mail goes to the saved address, so save first.">
         <Input value={form.email} onChange={(email) => set({ email })} aria-label="Notification email" />
       </Field>
+      <TierHeader
+        tier="fantastic"
+        label="Fantastic"
+        title="Fantastic offers — email immediately"
+        enabled={form.priorityEnabled}
+        onToggle={(priorityEnabled) => set({ priorityEnabled })}
+      />
       {form.priority.simple ? (
         <Thresholds
-          tier="fantastic"
           label="Fantastic"
-          title="Fantastic offers — emailed immediately"
+          enabled={form.priorityEnabled}
           hint="Score > and AI score > below: one email per offer, right after its AI assessment."
           value={form.priority}
           onChange={(priority) => set({ priority })}
@@ -126,11 +146,17 @@ export default function NotificationsSection({ settings, defaults, save }) {
       ) : (
         <RulesJson label="Fantastic" rules={settings.notify.priority.rules} />
       )}
+      <TierHeader
+        tier="good"
+        label="Good"
+        title="Good offers — daily/bulk digest"
+        enabled={form.bulkEnabled}
+        onToggle={(bulkEnabled) => set({ bulkEnabled })}
+      />
       {form.bulk.simple ? (
         <Thresholds
-          tier="good"
           label="Good"
-          title="Good offers — collected into one digest"
+          enabled={form.bulkEnabled}
           hint="Score > and AI score > below: one digest email after a fetch has been processed."
           value={form.bulk}
           onChange={(bulk) => set({ bulk })}

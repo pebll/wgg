@@ -158,15 +158,26 @@ describe('#settings forms <-> API documents', () => {
       maxAgeHours: 24,
       priority: { simple: true, score: 7, ai: 7 },
       bulk: { simple: false },
+      priorityEnabled: true,
+      bulkEnabled: true,
     });
+    const off = notifyToForm({ ...notify, priority: { ...notify.priority, enabled: false } });
+    expect(off).toMatchObject({ priorityEnabled: false, bulkEnabled: true });
   });
 
   it('sends only what the form can express: complex rules are left alone', () => {
     const form = { ...notifyToForm(notify), email: ' a@b.de ', priority: { simple: true, score: 8, ai: null } };
     expect(notifyBody(form)).toEqual({
-      notify: { email: 'a@b.de', enabled: true, maxAgeHours: 24, priority: { rules: [{ overall: { gt: 8 } }] } },
+      notify: {
+        email: 'a@b.de',
+        enabled: true,
+        maxAgeHours: 24,
+        priority: { enabled: true, rules: [{ overall: { gt: 8 } }] },
+        bulk: { enabled: true },
+      },
     });
     expect(notifyBody({ ...form, email: '  ' }).notify.email).toBeNull();
+    expect(notifyBody({ ...form, bulkEnabled: false }).notify.bulk).toEqual({ enabled: false });
   });
 
   const scoring = {

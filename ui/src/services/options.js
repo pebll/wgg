@@ -173,6 +173,8 @@ export function notifyToForm(notify) {
     maxAgeHours: notify.maxAgeHours,
     priority: rulesToThresholds(notify.priority?.rules),
     bulk: rulesToThresholds(notify.bulk?.rules),
+    priorityEnabled: notify.priority?.enabled !== false,
+    bulkEnabled: notify.bulk?.enabled !== false,
   };
 }
 
@@ -183,8 +185,10 @@ export function notifyBody(form) {
     enabled: form.enabled,
     maxAgeHours: form.maxAgeHours,
   };
-  if (form.priority.simple) notify.priority = { rules: thresholdsToRules(form.priority) };
-  if (form.bulk.simple) notify.bulk = { rules: thresholdsToRules(form.bulk) };
+  notify.priority = { enabled: form.priorityEnabled };
+  notify.bulk = { enabled: form.bulkEnabled };
+  if (form.priority.simple) notify.priority.rules = thresholdsToRules(form.priority);
+  if (form.bulk.simple) notify.bulk.rules = thresholdsToRules(form.bulk);
   return { notify };
 }
 

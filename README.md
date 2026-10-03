@@ -209,7 +209,7 @@ its own **Save** and **Reset to default** (reset fills the fields with the defau
   Add, edit, enable/disable and delete; the server's validation message is shown under the form. Adding or changing an
   enabled query starts a fetch right away (`POST /api/fetch`); if one is already running or came too recently (409/429)
   that is shown as information, the query is saved and the scheduler fetches it anyway.
-- **Notifications.** Email address, alerts on/off, and the thresholds for **Fantastic** offers (one mail right after the
+- **Notifications.** Email address, alerts on/off (all, and separately for Fantastic and Good), and the thresholds for **Fantastic** offers (one mail right after the
   AI assessment) and **Good** offers (collected into one digest) as two numbers each, "Score >" and "AI score >" (stored as the rules
   `[{overall: {gt: x}, ai: {gt: y}}]`; an empty field is ignored). Rules that are more complex than that (several rules,
   other fields such as rent or distance) are shown read-only as JSON, "edit in config" (`notify` in `config/wgg.yaml` is
@@ -481,6 +481,12 @@ the AI). Two tiers, both configured under `notify:` in `config/wgg.yaml` (see `c
   Default: overall > 5 AND AI > 5. Listings already sent as Fantastic are not repeated; an empty digest is never sent.
   If a bot wall or backoff stops the queues, the digest waits for the next cycle. Config key `notify.bulk`; the subject is
   "N good offers — WG Gefunden!".
+
+**Switches.** Fantastic and Good alerts each have their own on/off switch in Options › Notifications
+(`notify.priority.enabled`, `notify.bulk.enabled` in your saved settings; default on, `notify.enabled` stays the master
+switch "All email alerts"). A switched-off tier sends nothing and marks nothing, its offers are not moved into the other
+mail, and its thresholds still drive the tier filter; switching it back on announces only offers still within
+`notify.maxAgeHours`.
 
 **Naming.** The names in the UI and in the mails are Fantastic (config `notify.priority`, `notified_kind = 'priority'`)
 and Good (config `notify.bulk`, `notified_kind = 'bulk'`). The config keys and the stored values keep their old names, so
