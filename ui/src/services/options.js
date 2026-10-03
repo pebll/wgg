@@ -1,4 +1,5 @@
 import { refusalMessage } from './format.js';
+import { DEFAULT_WINDOW, DEFAULT_INTERVAL_HOURS, isValidWindow, isValidInterval } from './schedule.js';
 
 // Limits mirror lib/settings/validate.js and lib/queries (the server stays the authority; this saves a round trip).
 const MAX_PROFILE_LENGTH = 4000;
@@ -68,7 +69,7 @@ export function validateProfile(text) {
 }
 
 /** @returns {string[]} */
-export function validateNotifyForm({ email, maxAgeHours, priority, bulk }) {
+export function validateNotifyForm({ email, maxAgeHours, priority, bulk, priorityWindow, bulkWindow, bulkInterval }) {
   const errors = [];
   const mail = String(email ?? '').trim();
   if (mail !== '' && (mail.length > 254 || !EMAIL.test(mail))) errors.push('Enter a valid email address.');
@@ -86,6 +87,17 @@ export function validateNotifyForm({ email, maxAgeHours, priority, bulk }) {
         break;
       }
     }
+  }
+  for (const [name, window] of [
+    ['Fantastic', priorityWindow],
+    ['Good', bulkWindow],
+  ]) {
+    if (window !== undefined && !isValidWindow(sliderToWindow(window))) {
+      errors.push(`${name}: the sending window must start before it ends.`);
+    }
+  }
+  if (bulkInterval !== undefined && !isValidInterval(bulkInterval)) {
+    errors.push('The Good interval must be a whole number of hours between 1 and 24.');
   }
   return errors;
 }
@@ -175,8 +187,14 @@ export function notifyToForm(notify) {
     bulk: rulesToThresholds(notify.bulk?.rules),
     priorityEnabled: notify.priority?.enabled !== false,
     bulkEnabled: notify.bulk?.enabled !== false,
+    priorityWindow: windowToSlider(notify.priority?.window),
+    bulkWindow: windowToSlider(notify.bulk?.window),
+    bulkInterval: notify.bulk?.intervalHours ?? DEFAULT_INTERVAL_HOURS,
   };
 }
+
+const windowToSlider = (w) => [w?.from ?? DEFAULT_WINDOW.from, w?.to ?? DEFAULT_WINDOW.to];
+const sliderToWindow = ([from, to]) => ({ from, to });
 
 /** PUT /api/settings body for the notification form; rules the form cannot express are not sent (they stay as they are). */
 export function notifyBody(form) {
@@ -185,8 +203,12 @@ export function notifyBody(form) {
     enabled: form.enabled,
     maxAgeHours: form.maxAgeHours,
   };
-  notify.priority = { enabled: form.priorityEnabled };
-  notify.bulk = { enabled: form.bulkEnabled };
+  notify.priority = { enabled: form.priorityEnabled, window: sliderToWindow(form.priorityWindow) };
+  notify.bulk = {
+    enabled: form.bulkEnabled,
+    window: sliderToWindow(form.bulkWindow),
+    intervalHours: form.bulkInterval,
+  };
   if (form.priority.simple) notify.priority.rules = thresholdsToRules(form.priority);
   if (form.bulk.simple) notify.bulk.rules = thresholdsToRules(form.bulk);
   return { notify };

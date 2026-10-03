@@ -100,3 +100,17 @@ export function summarizeBulk(window, intervalHours) {
   if (allDay(window)) return `Every ${intervalHours} h, at any time of day ${slots}.`;
   return `Every ${intervalHours} h between ${formatHour(window.from)} and ${formatHour(window.to)} ${slots}; otherwise one morning email.`;
 }
+
+/** The hour labels under a window slider (the 24 h day). */
+export const LABEL_MARKS = Object.freeze({ 0: '00', 6: '06', 12: '12', 18: '18', 24: '24' });
+
+/**
+ * Slider marks of the Good window: the hour labels plus an unlabelled tick (a "Strich") at every send slot, so the gaps
+ * between the mails are visible. Nothing but the labels for an impossible window.
+ */
+export function slotMarks(window, intervalHours) {
+  if (!isValidWindow(window) || !isValidInterval(intervalHours)) return { ...LABEL_MARKS };
+  const marks = { ...LABEL_MARKS };
+  for (const h of slotHours(window, intervalHours)) if (!(h in marks)) marks[h] = '';
+  return Object.fromEntries(Object.entries(marks).sort(([a], [b]) => a - b));
+}

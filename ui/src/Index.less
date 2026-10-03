@@ -1331,6 +1331,20 @@ body[theme-mode='dark'] .tier-badge--fantastic {
     max-width: 520px;
     padding: 0 8px;
 
+    &--hours {
+      padding-bottom: 28px; // room for the hour labels under the slider
+    }
+
+    // The Good send slots: thin vertical strokes on the track instead of Semi's round dots.
+    &--ticks .semi-slider-dot,
+    &--ticks .semi-slider-dot-active {
+      top: 10px;
+      width: 2px;
+      height: 12px;
+      border-radius: 1px;
+      background-color: var(--semi-color-text-2);
+    }
+
     &--weight {
       display: grid;
       grid-template-columns: 90px minmax(0, 1fr) 36px;

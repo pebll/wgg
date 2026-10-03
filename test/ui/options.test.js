@@ -77,6 +77,14 @@ describe('#client-side validation mirrors the server', () => {
     ]);
     // complex rules are not edited here, so they are not validated here either
     expect(validateNotifyForm({ ...notify, priority: { simple: false } })).toEqual([]);
+    expect(validateNotifyForm({ ...notify, priorityWindow: [7, 23], bulkWindow: [0, 24], bulkInterval: 3 })).toEqual(
+      [],
+    );
+    expect(validateNotifyForm({ ...notify, priorityWindow: [9, 9] })).toEqual([
+      expect.stringMatching(/Fantastic.*start/i),
+    ]);
+    expect(validateNotifyForm({ ...notify, bulkWindow: [12, 8] })).toEqual([expect.stringMatching(/Good.*start/i)]);
+    expect(validateNotifyForm({ ...notify, bulkInterval: 0 })).toEqual([expect.stringMatching(/interval/i)]);
   });
 
   it('profile: length limit', () => {
@@ -146,8 +154,8 @@ describe('#settings forms <-> API documents', () => {
   const notify = {
     email: null,
     enabled: true,
-    priority: { rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }] },
-    bulk: { rules: [{ overall: { gt: 5 }, rent: { lt: 600 } }] },
+    priority: { rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }], window: { from: 6, to: 22 } },
+    bulk: { rules: [{ overall: { gt: 5 }, rent: { lt: 600 } }], window: { from: 8, to: 20 }, intervalHours: 2 },
     maxAgeHours: 24,
   };
 
@@ -160,6 +168,14 @@ describe('#settings forms <-> API documents', () => {
       bulk: { simple: false },
       priorityEnabled: true,
       bulkEnabled: true,
+      priorityWindow: [6, 22],
+      bulkWindow: [8, 20],
+      bulkInterval: 2,
+    });
+    expect(notifyToForm({ ...notify, priority: { rules: [] }, bulk: { rules: [] } })).toMatchObject({
+      priorityWindow: [7, 23],
+      bulkWindow: [7, 23],
+      bulkInterval: 1,
     });
     const off = notifyToForm({ ...notify, priority: { ...notify.priority, enabled: false } });
     expect(off).toMatchObject({ priorityEnabled: false, bulkEnabled: true });
@@ -172,12 +188,12 @@ describe('#settings forms <-> API documents', () => {
         email: 'a@b.de',
         enabled: true,
         maxAgeHours: 24,
-        priority: { enabled: true, rules: [{ overall: { gt: 8 } }] },
-        bulk: { enabled: true },
+        priority: { enabled: true, rules: [{ overall: { gt: 8 } }], window: { from: 6, to: 22 } },
+        bulk: { enabled: true, window: { from: 8, to: 20 }, intervalHours: 2 },
       },
     });
     expect(notifyBody({ ...form, email: '  ' }).notify.email).toBeNull();
-    expect(notifyBody({ ...form, bulkEnabled: false }).notify.bulk).toEqual({ enabled: false });
+    expect(notifyBody({ ...form, bulkEnabled: false }).notify.bulk).toMatchObject({ enabled: false });
   });
 
   const scoring = {

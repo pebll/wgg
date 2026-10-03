@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, InputNumber, Switch, Toast } from '@douyinfe/semi-ui-19';
+import { Button, Input, InputNumber, Slider, Switch, Toast } from '@douyinfe/semi-ui-19';
 import Section, { Field } from './Section.jsx';
 import { errorMessage, xhrSend } from '../../services/xhr.js';
 import { formatRetryAfter } from '../../services/format.js';
 import { TierLabel } from '../TierBadge.jsx';
+import { LABEL_MARKS, formatHour, slotMarks, summarizeBulk, summarizePriority } from '../../services/schedule.js';
 import { notifyBody, notifyToForm, validateNotifyForm } from '../../services/options.js';
 
 /** The switch row of one tier: a tier that is off sends no mail, but its thresholds still define the tier filter. */
@@ -48,6 +49,36 @@ function Thresholds({ label, hint, enabled, value, onChange }) {
             aria-label={`${label} AI score threshold`}
           />
         </Field>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * "When may mails go out": a two-handle slider over the 24 h day (tooltip "07:00"). `marks` are the labels under it;
+ * for the Good tier they also carry the ticks at every send slot. `summary` is the sentence under the slider.
+ */
+function WindowSlider({ label, enabled, value, onChange, marks, summary, ticks = false, children }) {
+  return (
+    <div className={`options__group${enabled ? '' : ' options__muted'}`}>
+      <strong>{label}</strong>
+      <div className={`options__slider options__slider--hours${ticks ? ' options__slider--ticks' : ''}`}>
+        <Slider
+          range
+          min={0}
+          max={24}
+          step={1}
+          value={value}
+          marks={marks}
+          tipFormatter={formatHour}
+          getAriaValueText={formatHour}
+          aria-label={label}
+          onChange={onChange}
+        />
+      </div>
+      {children}
+      <div className="options__hint" aria-live="polite">
+        {summary}
       </div>
     </div>
   );
@@ -107,7 +138,8 @@ export default function NotificationsSection({ settings, defaults, save }) {
         <p>
           wgg emails you about good offers. <strong>Fantastic</strong> offers are emailed immediately, right after the
           AI assessment of a single offer; <strong>Good</strong> offers are collected into one digest after a fetch has
-          been processed. An offer gets the tier whose score is above the number(s) you set (Fantastic wins when both
+          been processed. Both only go out in the hours you choose below (server time); what arrives outside waits for
+          one morning email. An offer gets the tier whose score is above the number(s) you set (Fantastic wins when both
           match). Leave a field empty to ignore it.
         </p>
       }
@@ -146,6 +178,14 @@ export default function NotificationsSection({ settings, defaults, save }) {
       ) : (
         <RulesJson label="Fantastic" rules={settings.notify.priority.rules} />
       )}
+      <WindowSlider
+        label="Fantastic: send between"
+        enabled={form.priorityEnabled}
+        value={form.priorityWindow}
+        onChange={(priorityWindow) => set({ priorityWindow })}
+        marks={LABEL_MARKS}
+        summary={summarizePriority({ from: form.priorityWindow[0], to: form.priorityWindow[1] })}
+      />
       <TierHeader
         tier="good"
         label="Good"
@@ -164,6 +204,29 @@ export default function NotificationsSection({ settings, defaults, save }) {
       ) : (
         <RulesJson label="Good" rules={settings.notify.bulk.rules} />
       )}
+      <WindowSlider
+        label="Good: digests between"
+        enabled={form.bulkEnabled}
+        value={form.bulkWindow}
+        onChange={(bulkWindow) => set({ bulkWindow })}
+        marks={slotMarks({ from: form.bulkWindow[0], to: form.bulkWindow[1] }, form.bulkInterval)}
+        ticks
+        summary={summarizeBulk({ from: form.bulkWindow[0], to: form.bulkWindow[1] }, form.bulkInterval)}
+      >
+        <strong>Good: one digest every {form.bulkInterval} h</strong>
+        <div className="options__slider options__slider--hours">
+          <Slider
+            min={1}
+            max={24}
+            step={1}
+            value={form.bulkInterval}
+            tipFormatter={(v) => `${v} h`}
+            getAriaValueText={(v) => `${v} hours`}
+            aria-label="Good digest interval in hours"
+            onChange={(bulkInterval) => set({ bulkInterval })}
+          />
+        </div>
+      </WindowSlider>
       <Field label="Maximum age in hours" hint="Offers posted longer ago than this are never announced.">
         <InputNumber
           value={form.maxAgeHours}
