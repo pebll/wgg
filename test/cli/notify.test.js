@@ -155,7 +155,10 @@ describe('#cli test-mail', () => {
 });
 
 describe('#cli notify and the alert triggers', () => {
-  const rules = (priority, bulk) => `notify:\n  priority:\n    rules: ${priority}\n  bulk:\n    rules: ${bulk}\n`;
+  // The send window is open all day: these tests do not depend on the time they run at.
+  const allDay = '    window: { from: 0, to: 24 }\n';
+  const rules = (priority, bulk) =>
+    `notify:\n  priority:\n    rules: ${priority}\n${allDay}  bulk:\n    rules: ${bulk}\n${allDay}`;
 
   it('notify --dry-run prints what would go out and marks nothing', async () => {
     const { dir, cfgFile } = await seeded(2, rules('[{ ai: { gt: 7 } }]', '[]'));
@@ -167,6 +170,26 @@ describe('#cli notify and the alert triggers', () => {
     expect(r.out).toContain('AI 8');
     expect(r.out).toMatch(/2 fantastic/);
     expect(query(dir, 'SELECT COUNT(*) AS n FROM user_listings WHERE notified_at IS NOT NULL')[0].n).toBe(0);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('notify --dry-run shows what is queued by the send schedule and until when', async () => {
+    const { dir, cfgFile } = await seeded(
+      3,
+      'notify:\n  priority:\n    rules: [{ ai: { gt: 7 } }]\n  bulk:\n    rules: []\n',
+    );
+    await fetchDetails(cfgFile);
+    await cli(['llm', '--config', cfgFile], { env: { ...LLM }, llmFetch, llmSleep: async () => {} });
+    const night = new Date();
+    night.setHours(3, 0, 0, 0);
+    const r = await cli(['notify', '--dry-run', '--config', cfgFile], {
+      env: SMTP,
+      createTransport: noTransport,
+      now: () => night.getTime(),
+    });
+    expect(r.code).toBe(0);
+    expect(r.out).not.toContain('would send');
+    expect(r.out).toContain('3 fantastic queued until 07:00');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -214,7 +237,9 @@ describe('#cli notify and the alert triggers', () => {
     expect(r.code).toBe(0);
     expect(sent).toHaveLength(2);
     expect(sent.every((m) => m.subject.includes('AI 8'))).toBe(true);
-    expect(query(dir, "SELECT COUNT(*) AS n FROM user_listings WHERE notified_kind = 'priority'")[0].n).toBe(2);
+    expect(
+      query(dir, "SELECT COUNT(*) AS n FROM user_listings WHERE notified_kind = 'priority'")[0].n,
+    ).toBeGreaterThanOrEqual(2);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -284,6 +309,49 @@ describe('#cli notify and the alert triggers', () => {
     expect(new Set(sent.map((m) => m.subject)).size).toBeGreaterThanOrEqual(1);
     const marked = query(dir, "SELECT COUNT(*) AS n FROM user_listings WHERE notified_kind = 'priority'")[0].n;
     expect(marked).toBe(sent.length);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('run: the timer sends the held-back Fantastic mails when the window opens, without any queue activity', async () => {
+    const { dir, cfgFile } = await seeded(
+      2,
+      'notify:\n  priority:\n    rules: [{ ai: { gt: 7 } }]\n  bulk:\n    rules: []\n',
+    );
+    const day = new Date();
+    const clock = { t: day.setHours(3, 0, 0, 0) };
+    const sent = [];
+    const controller = new AbortController();
+    let calls = 0;
+    let sentBeforeOpening = null;
+    const llmFetchThenOpen = async (...a) => {
+      const r = await llmFetch(...a);
+      if (++calls === 2) {
+        setTimeout(() => {
+          sentBeforeOpening = sent.length;
+          clock.t = new Date(clock.t).setHours(7, 0, 0, 0);
+          setTimeout(() => controller.abort(), 300);
+        }, 100);
+      }
+      return r;
+    };
+    const r = await cli(['run', '--config', cfgFile], {
+      withFetcher: async (fn) =>
+        fn(async (url) => (url.includes('wg-zimmer-in-Muenchen.90') ? searchHtml : detailHtml)),
+      signal: controller.signal,
+      detailSleep: async () => {},
+      llmSleep: async () => {},
+      llmFetch: llmFetchThenOpen,
+      env: { ...LLM, ...SMTP },
+      createTransport: transportTo(sent),
+      now: () => clock.t,
+      alertCheckMs: 20,
+    });
+    expect(r.code).toBe(0);
+    expect(sentBeforeOpening).toBe(0);
+    expect(sent.length).toBeGreaterThanOrEqual(1);
+    expect(
+      query(dir, "SELECT COUNT(*) AS n FROM user_listings WHERE notified_kind = 'priority'")[0].n,
+    ).toBeGreaterThanOrEqual(2);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });

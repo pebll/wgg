@@ -113,7 +113,9 @@ describe('#send schedule defaults', () => {
 
   it('are merged into the stored settings of users who saved before the schedule existed', () => {
     const defaults = defaultUserSettings({ evaluation: evaluation(), notify: notify() });
-    const merged = mergeSettings(defaults, { notify: { priority: { enabled: false, rules: [] }, bulk: { rules: [] } } });
+    const merged = mergeSettings(defaults, {
+      notify: { priority: { enabled: false, rules: [] }, bulk: { rules: [] } },
+    });
     expect(merged.notify.priority).toEqual({ enabled: false, rules: [], window: { from: 7, to: 23 } });
     expect(merged.notify.bulk.intervalHours).toBe(1);
   });

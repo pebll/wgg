@@ -38,7 +38,7 @@ export function makeDirectory(notify = {}, users) {
  * Seeds one listing that is fully processed for `over.userId` (default alice, who gets a query for it): details,
  * evaluation and a finished AI assessment.
  * `over` can change: userId, overall, fit, price, size, distanceKm, verbindung, settingsHash, excluded, publishedAt,
- * assessed.
+ * assessed, assessedAt (when the AI result was stored; default NOW).
  */
 export function seedAssessed(n, over = {}) {
   const o = { overall: 8, fit: 8, price: 650, verbindung: 0.1, assessed: true, userId: USER, ...over };
@@ -96,7 +96,7 @@ export function seedAssessed(n, over = {}) {
         promptVersion: PROMPT_VERSION,
         settingsHash: o.settingsHash ?? HASH,
       },
-      NOW,
+      o.assessedAt ?? NOW,
     );
   }
   return id;

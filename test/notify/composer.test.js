@@ -164,6 +164,16 @@ describe('#digest mail', () => {
     expect(m.html).toContain('&lt;b onmouseover=x&gt;');
   });
 
+  it('has a Fantastic variant for the morning mail with the offers of the night', () => {
+    const a = listing({ id: 1, title: 'Low one', evaluation: { overall: 8.1, scores: {}, details: {} } });
+    const b = listing({ id: 2, title: 'High one', evaluation: { overall: 9.4, scores: {}, details: {} } });
+    const m = composeDigest([a, b], { now: NOW, tier: 'fantastic' });
+    expect(m.subject).toBe('✦ 2 Fantastic offers overnight — WG Gefunden!');
+    expect(m.text).toContain('✦ 2 Fantastic offers overnight, best score first:');
+    expect(m.html).toContain('✦ 2 Fantastic offers overnight</h2>');
+    expect(m.text.indexOf('High one')).toBeLessThan(m.text.indexOf('Low one'));
+  });
+
   it('refuses an empty digest', () => {
     expect(() => composeDigest([], { now: NOW })).toThrow('empty digest');
   });

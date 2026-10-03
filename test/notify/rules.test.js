@@ -74,8 +74,8 @@ describe('#notify config', () => {
       enabled: true,
       dryRun: false,
       maxAgeHours: 24,
-      priority: { rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }] },
-      bulk: { rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }] },
+      priority: { rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }], window: { from: 7, to: 23 } },
+      bulk: { rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }], window: { from: 7, to: 23 }, intervalHours: 1 },
     });
   });
 
