@@ -42,8 +42,9 @@ COPY bin ./bin
 COPY lib ./lib
 COPY config ./config
 COPY --from=build /app/ui/dist ./ui/dist
-# The server's email composer imports the UI's (dependency-free) formatting module.
-COPY ui/src/services/format.js ./ui/src/services/format.js
+# The server shares the UI's dependency-free helper modules (formatting, mail schedule): copy the whole folder so a
+# new shared module can never be missing from the image.
+COPY ui/src/services ./ui/src/services
 
 # Persistent state: db/ and config/ are bind mounts, .cloakbrowser (downloaded Chromium, ~700 MB) a named volume.
 # The unprivileged "node" user (uid 1000) must own them; mounted host folders need the same owner (chown 1000:1000).
