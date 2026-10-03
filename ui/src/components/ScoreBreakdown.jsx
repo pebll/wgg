@@ -1,7 +1,7 @@
 import { Typography } from '@douyinfe/semi-ui-19';
 import CircleRating from './CircleRating.jsx';
 import StarRating from './StarRating.jsx';
-import { aiScore, breakdownRows, formatScore } from '../services/format.js';
+import { aiScore, breakdownRows, formatScore, publicReason } from '../services/format.js';
 
 /** Overall score as 5 stars plus one row per parameter (stars, value, reason) and the unscored fields. */
 export default function ScoreBreakdown({ evaluation, geoPrecision, llm }) {
@@ -20,7 +20,7 @@ export default function ScoreBreakdown({ evaluation, geoPrecision, llm }) {
           <CircleRating score={aiScore(llm)} showValue showEmpty />
         </div>
       </div>
-      {excludedReason && <div className="breakdown__excluded">Excluded: {excludedReason}</div>}
+      {excludedReason && <div className="breakdown__excluded">Excluded: {publicReason(excludedReason)}</div>}
       {geoPrecision === 'district' && (
         <div className="breakdown__note">Location is the district centre only, so the distance is approximate.</div>
       )}

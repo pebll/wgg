@@ -360,10 +360,9 @@ export function refusalMessage(rejection) {
 const DEFAULT_BADGE_THRESHOLD = 0.3;
 const HIGH_VERBINDUNG = 0.6; // the default llm.excludeThreshold: from here the listing is normally excluded
 
-/** 0.452 -> "45 %" */
-export function formatPercent(probability) {
-  if (!has(probability)) return NONE;
-  return `${Math.round(Number(probability) * 100)} %`;
+/** An exclusion reason as shown to the user: the internal "(p=0.82)" probability is dropped. */
+export function publicReason(reason) {
+  return typeof reason === 'string' ? reason.replace(/\s*\(p=[\d.]+\)/, '') : reason;
 }
 
 /** Colour tone of a Verbindung probability: low (below the badge threshold), mid, high. */
@@ -372,11 +371,11 @@ export function verbindungTone(probability, badgeThreshold = DEFAULT_BADGE_THRES
   return probability >= badgeThreshold ? 'mid' : 'low';
 }
 
-/** The tile's warning badge: {text: "Verbindung? 45 %", tone} from `badgeThreshold` on, else null. */
+/** The tile's warning badge: {text: "Verbindung !", tone} from `badgeThreshold` on, else null. */
 export function verbindungBadge(llm, badgeThreshold = DEFAULT_BADGE_THRESHOLD) {
   const p = llm?.status === 'done' ? llm.result?.verbindungProbability : null;
   if (!has(p) || p < (badgeThreshold ?? DEFAULT_BADGE_THRESHOLD)) return null;
-  return { text: `Verbindung? ${formatPercent(p)}`, tone: verbindungTone(p, badgeThreshold) };
+  return { text: 'Verbindung !', tone: verbindungTone(p, badgeThreshold) };
 }
 
 /** "Not eligible: only women wanted" when the AI found the ad explicitly excludes the user, else null. */
@@ -442,7 +441,7 @@ export function hiddenLabel(item) {
   if (!hidden) return null;
   if (hidden.by === 'user' && hidden.reason === 'Messaged') return messagedLabel(item, hidden.at);
   if (hidden.by === 'program') {
-    return has(hidden.reason) ? `Removed automatically: ${hidden.reason}` : 'Removed automatically';
+    return has(hidden.reason) ? `Removed automatically: ${publicReason(hidden.reason)}` : 'Removed automatically';
   }
   return 'Hidden by you';
 }

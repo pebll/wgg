@@ -5,7 +5,6 @@ import {
   deductionSummary,
   describeLlmModel,
   eligibilityLabel,
-  formatPercent,
   isVerbindung,
   llmStatusLabel,
   verbindungTone,
@@ -32,13 +31,12 @@ function List({ title, items, className, flagLabel }) {
   );
 }
 
-/** Side-panel block "AI assessment": Verbindung probability bar, evidence, fit score, summary, pros and red flags. */
+/** Side-panel block "AI assessment": Verbindung warning, evidence, fit score, summary, pros and red flags. */
 export default function AiAssessment({ llm, badgeThreshold, now }) {
   if (!llm) return null;
   const status = llmStatusLabel(llm);
   const result = llm.status === 'done' ? llm.result : null;
-  const p = result?.verbindungProbability;
-  const tone = verbindungTone(p, badgeThreshold);
+  const tone = verbindungTone(result?.verbindungProbability, badgeThreshold);
   const model = describeLlmModel(llm, now);
   const ineligible = eligibilityLabel(result);
   const why = deductionRows(result);
@@ -61,18 +59,7 @@ export default function AiAssessment({ llm, badgeThreshold, now }) {
           )}
           {flagged && (
             <div className="ai__row">
-              <span className="ai__label">Verbindung!</span>
-              <div
-                className={`ai__bar ai__bar--${tone}`}
-                role="meter"
-                aria-label="Probability of a Studentenverbindung"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(p * 100)}
-              >
-                <div className="ai__bar-fill" style={{ width: `${Math.round(p * 100)}%` }} />
-              </div>
-              <span className={`ai__percent ai__percent--${tone}`}>{formatPercent(p)}</span>
+              <span className={`ai__verbindung ai__verbindung--${tone}`}>Verbindung !</span>
             </div>
           )}
           {flagged && result.verbindungSignals.length > 0 && (

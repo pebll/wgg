@@ -88,7 +88,6 @@ describe('#priority mail', () => {
       'rent: 9',
       'Cheap for the area',
       'AI fit: 8 / 10',
-      'Verbindung probability: 15 %',
       'A calm WG of students.',
       'Balcony',
       'Short contract',
@@ -106,6 +105,19 @@ describe('#priority mail', () => {
     expect(html).toContain('href="https://www.wg-gesucht.de/wg-zimmer-in-Muenchen-Maxvorstadt.11.html"');
     expect(html).toContain('Cheap for the area');
     expect(html).toContain('A calm WG of students.');
+  });
+
+  it('prints no Verbindung percentage, and a warning with the signals only when flagged', () => {
+    const calm = composePriority(listing(), { now: NOW });
+    expect(calm.text).not.toMatch(/verbindung/i);
+    expect(calm.html).not.toMatch(/verbindung/i);
+    const l = listing();
+    l.llm.result = { ...l.llm.result, verbindungProbability: 0.82, verbindungSignals: ['Bundesbrüder', 'Kneipe'] };
+    const flagged = composePriority(l, { now: NOW });
+    expect(flagged.text).toContain('⚠ Possible Verbindung: Bundesbrüder; Kneipe');
+    expect(flagged.html).toContain('Possible Verbindung');
+    expect(flagged.html).toContain('Bundesbrüder');
+    expect(flagged.text + flagged.html).not.toMatch(/82|probability/i);
   });
 
   it('shows a not-eligible assessment with its reason', () => {

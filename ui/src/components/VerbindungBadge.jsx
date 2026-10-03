@@ -1,6 +1,6 @@
 import { verbindungBadge } from '../services/format.js';
 
-/** Small warning badge "Verbindung? 45 %" from the configured threshold on; renders nothing below it. */
+/** Small warning badge "Verbindung !" from the configured threshold on; renders nothing below it. */
 export default function VerbindungBadge({ llm, threshold }) {
   const badge = verbindungBadge(llm, threshold);
   if (!badge) return null;
@@ -8,7 +8,7 @@ export default function VerbindungBadge({ llm, threshold }) {
   return (
     <span
       className={`verbindung-badge verbindung-badge--${badge.tone}`}
-      title={signals.length > 0 ? signals.join(' | ') : 'Possible Studentenverbindung'}
+      title={signals.length > 0 ? signals.slice(0, 3).join(' | ') : 'Possible Studentenverbindung'}
     >
       {badge.text}
     </span>

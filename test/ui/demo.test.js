@@ -36,11 +36,16 @@ describe('#ui presentation demo data', () => {
     expect(scoring.llm.result.eligible).toBe(true);
   });
 
-  it('has a Verbindung example flagged at 97 % with quoted signals, removed automatically', () => {
+  it('has a Verbindung example flagged (no percentage) with quoted signals, removed automatically', () => {
     expect(isVerbindung(verbindung.llm, 0.3)).toBe(true);
-    expect(verbindungBadge(verbindung.llm, 0.3)).toMatchObject({ text: 'Verbindung? 97 %', tone: 'high' });
+    expect(verbindungBadge(verbindung.llm, 0.3)).toMatchObject({ text: 'Verbindung !', tone: 'high' });
     expect(verbindung.llm.result.verbindungSignals.length).toBeGreaterThanOrEqual(2);
     expect(hiddenLabel(verbindung)).toMatch(/^Removed automatically: .*Studentenverbindung/);
+  });
+
+  it('has no flatmates example and no stored percentage in the removal reason', () => {
+    expect(demoListings(NOW).flat).toBeUndefined();
+    expect(verbindung.hidden.reason).not.toMatch(/[0-9]/);
   });
 
   it('is relative to now, so the NEW tag never goes stale', () => {

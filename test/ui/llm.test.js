@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  formatPercent,
+  publicReason,
   verbindungTone,
   verbindungBadge,
   llmStatusLabel,
@@ -23,11 +23,13 @@ const done = (p, extra = {}) => ({
 });
 
 describe('#llm UI helpers', () => {
-  it('formatPercent rounds to whole percent', () => {
-    expect(formatPercent(0.452)).toBe('45 %');
-    expect(formatPercent(0)).toBe('0 %');
-    expect(formatPercent(1)).toBe('100 %');
-    expect(formatPercent(null)).toBe('---');
+  it('publicReason drops the internal probability from an exclusion reason', () => {
+    expect(publicReason('LLM: likely Studentenverbindung (p=0.82): "Bundesbrüder"; "Kneipe"')).toBe(
+      'LLM: likely Studentenverbindung: "Bundesbrüder"; "Kneipe"',
+    );
+    expect(publicReason('LLM: likely Studentenverbindung (p=0.82)')).toBe('LLM: likely Studentenverbindung');
+    expect(publicReason('excluded keyword "Corps"')).toBe('excluded keyword "Corps"');
+    expect(publicReason(null)).toBeNull();
   });
 
   it('verbindungTone: low below the badge threshold, high from the exclude level', () => {
@@ -37,14 +39,15 @@ describe('#llm UI helpers', () => {
     expect(verbindungTone(0.6, 0.3)).toBe('high');
   });
 
-  it('verbindungBadge shows "Verbindung? 45 %" from the threshold on, never without a result', () => {
-    expect(verbindungBadge(done(0.45), 0.3)).toEqual({ text: 'Verbindung? 45 %', tone: 'mid' });
-    expect(verbindungBadge(done(0.3), 0.3)?.text).toBe('Verbindung? 30 %');
+  it('verbindungBadge shows "Verbindung !" without a number from the threshold on, never without a result', () => {
+    expect(verbindungBadge(done(0.45), 0.3)).toEqual({ text: 'Verbindung !', tone: 'mid' });
+    expect(verbindungBadge(done(0.3), 0.3)?.text).toBe('Verbindung !');
     expect(verbindungBadge(done(0.29), 0.3)).toBeNull();
     expect(verbindungBadge(done(0.9), 0.3)?.tone).toBe('high');
     expect(verbindungBadge({ status: 'pending', result: null }, 0.3)).toBeNull();
     expect(verbindungBadge(undefined, 0.3)).toBeNull();
-    expect(verbindungBadge(done(0.4), undefined)?.text).toBe('Verbindung? 40 %'); // default threshold 0.3
+    expect(verbindungBadge(done(0.4), undefined)?.text).toBe('Verbindung !'); // default threshold 0.3
+    expect(JSON.stringify(verbindungBadge(done(0.45), 0.3))).not.toMatch(/[0-9]/);
   });
 
   it('llmStatusLabel explains pending / failed / skipped and is null when done or unknown', () => {
@@ -87,6 +90,9 @@ describe('#hiddenLabel', () => {
     expect(hiddenLabel({ hidden: { by: 'user', reason: 'Not interested', at: 1 } })).toBe('Hidden by you');
     expect(hiddenLabel({ hidden: { by: 'program', reason: 'excluded keyword "Corps"', at: 1 } })).toBe(
       'Removed automatically: excluded keyword "Corps"',
+    );
+    expect(hiddenLabel({ hidden: { by: 'program', reason: 'LLM: likely Studentenverbindung (p=0.82)', at: 1 } })).toBe(
+      'Removed automatically: LLM: likely Studentenverbindung',
     );
     expect(hiddenLabel({ hidden: { by: 'program', reason: null, at: 1 } })).toBe('Removed automatically');
     expect(hiddenLabel({ hidden: null })).toBeNull();

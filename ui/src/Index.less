@@ -960,36 +960,9 @@ body[theme-mode='dark'] .tier-badge--fantastic {
     color: var(--semi-color-text-2);
   }
 
-  &__bar {
-    flex: 1;
-    height: 10px;
-    border-radius: 5px;
-    background: var(--semi-color-fill-1);
-    overflow: hidden;
-
-    &--low .ai__bar-fill {
-      background: var(--semi-color-success);
-    }
-
-    &--mid .ai__bar-fill {
-      background: var(--semi-color-warning);
-    }
-
-    &--high .ai__bar-fill {
-      background: var(--semi-color-danger);
-    }
-  }
-
-  &__bar-fill {
-    height: 100%;
-    border-radius: 5px;
-  }
-
-  &__percent {
-    flex: none;
-    min-width: 44px;
-    text-align: right;
-    font-weight: 600;
+  &__verbindung {
+    font-size: 17px;
+    font-weight: 700;
 
     &--mid {
       color: var(--semi-color-warning);
@@ -1001,7 +974,7 @@ body[theme-mode='dark'] .tier-badge--fantastic {
   }
 
   &__signals {
-    margin: 0 0 6px 84px;
+    margin: 0 0 6px;
     padding-left: 16px;
     color: var(--semi-color-text-1);
     font-style: italic;

@@ -8,15 +8,7 @@ import ListingCard from './ListingCard.jsx';
 import ScoreBreakdown from './ScoreBreakdown.jsx';
 import { TierIcon, TierLabel } from './TierBadge.jsx';
 import WeightsPie from './options/WeightsPie.jsx';
-import {
-  DEMO_PARAMETERS,
-  DEMO_PHOTOS,
-  DEMO_TARGET,
-  demoEmail,
-  demoListings,
-  demoStats,
-  demoWeights,
-} from '../services/demo.js';
+import { DEMO_PARAMETERS, DEMO_TARGET, demoEmail, demoListings, demoStats, demoWeights } from '../services/demo.js';
 import { formatRent } from '../services/format.js';
 import '../About.less';
 
@@ -146,7 +138,7 @@ function SettingsMock() {
  */
 export default function About({ onLogin, theme, onToggleTheme, loggedIn = false, onBack }) {
   const [now] = useState(Date.now);
-  const { scoring, verbindung, flat } = demoListings(now);
+  const { scoring, verbindung } = demoListings(now);
   const stats = demoStats();
   const [mode, setMode] = useState('fantastic');
 
@@ -182,41 +174,31 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
 
       <main>
         <section className="about__hero" aria-labelledby="about-title">
-          <img
-            className="about__hero-photo"
-            src={DEMO_PHOTOS.hero}
-            alt="Colourful old-town buildings along a quiet European street (generic stock photo)"
-            width="1200"
-            height="800"
-            fetchPriority="high"
-          />
-          <div className="about__hero-body">
-            <h1 id="about-title">
-              <span className="about__sr">WG Gefunden! </span>
-              <span aria-hidden="true">
-                <span className="brand__wg">WG</span> Gefunden<span className="brand__bang">!</span>
-              </span>
-            </h1>
-            <p className="about__tagline">
-              Your private WG-Gesucht scout for any city. It watches new offers, has an AI read each ad and only emails
-              you about the good ones.
-            </p>
-            <div className="about__cta">
-              {!loggedIn && (
-                <Button theme="solid" type="primary" size="large" onClick={onLogin}>
-                  Log in
-                </Button>
-              )}
-              <Button
-                theme="light"
-                size="large"
-                icon={<IconArrowDown />}
-                iconPosition="right"
-                onClick={() => scrollToId('how')}
-              >
-                How it works
+          <h1 id="about-title">
+            <span className="about__sr">WG Gefunden! </span>
+            <span aria-hidden="true">
+              <span className="brand__wg">WG</span> Gefunden<span className="brand__bang">!</span>
+            </span>
+          </h1>
+          <p className="about__tagline">
+            Your private WG-Gesucht scout for any city. It watches new offers, has an AI read each ad and only emails
+            you about the good ones.
+          </p>
+          <div className="about__cta">
+            {!loggedIn && (
+              <Button theme="solid" type="primary" size="large" onClick={onLogin}>
+                Log in
               </Button>
-            </div>
+            )}
+            <Button
+              theme="light"
+              size="large"
+              icon={<IconArrowDown />}
+              iconPosition="right"
+              onClick={() => scrollToId('how')}
+            >
+              How it works
+            </Button>
           </div>
         </section>
 
@@ -300,30 +282,6 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
             </div>
             <div className="about__panel">
               <AiAssessment llm={verbindung.llm} badgeThreshold={BADGE_THRESHOLD} now={now} />
-            </div>
-          </Example>
-        </Feature>
-
-        <Feature
-          id="flat"
-          title="Know the flat before you write"
-          intro="Cards show who lives there (how many flatmates, and how many women and men), the distance to your target and the tier the offer reached."
-        >
-          <Example>
-            <div className="about__tile">
-              <div inert>
-                <ListingCard
-                  item={flat}
-                  sort="overall"
-                  selected={false}
-                  onSelect={noop}
-                  onDismiss={noop}
-                  onMessaged={noop}
-                  onRestore={noop}
-                  badgeThreshold={BADGE_THRESHOLD}
-                  targetName={DEMO_TARGET}
-                />
-              </div>
             </div>
           </Example>
         </Feature>

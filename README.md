@@ -167,10 +167,8 @@ The presentation page uses generic stock photos from Unsplash (free under the
 
 | File | Photo | Photographer |
 | --- | --- | --- |
-| `hero-street.webp` | [Colorful historic buildings line a european city street](https://unsplash.com/photos/colorful-historic-buildings-line-a-european-city-street-Wr7v9sMRsN8) (Wrocław) | Roman Vasylovskyi |
 | `living-room.webp` | [A living room filled with furniture and decor](https://unsplash.com/photos/a-living-room-filled-with-furniture-and-decor-MfuqFoaDtlU) | Paul Esch-Laurent |
-| `kitchen.webp` | [Brown wooden table near window](https://unsplash.com/photos/brown-wooden-table-near-window-bklWX3uwD9c) | Bluewater Sweden |
-| `bedroom.webp` | [White bed near white window](https://unsplash.com/photos/white-bed-near-white-window-ABohRftG_Os) (Berlin) | Julia (beazy) |
+| `traditional-living-room.webp` | [A living room with wood paneling and a gray couch](https://unsplash.com/photos/a-living-room-with-wood-paneling-and-a-gray-couch-fAprylEyuCs) (Woodstock, NY) | Clay Banks |
 
 ## Accounts and login
 

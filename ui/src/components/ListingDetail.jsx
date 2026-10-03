@@ -17,6 +17,7 @@ import {
   hiddenLabel,
   messagedLabel,
   postedAt,
+  publicReason,
   safeLink,
 } from '../services/format.js';
 
@@ -58,7 +59,7 @@ export default function ListingDetail({ item, onDismiss, onMessaged, onRestore, 
         )}
         <DismissButton item={item} onDismiss={onDismiss} onMessaged={onMessaged} onRestore={onRestore} size="default" />
       </div>
-      {excludedReason && <div className="detail__excluded">Excluded: {excludedReason}</div>}
+      {excludedReason && <div className="detail__excluded">Excluded: {publicReason(excludedReason)}</div>}
       <dl className="detail__facts">
         <dt>Rent</dt>
         <dd>
