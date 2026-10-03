@@ -6,6 +6,14 @@
 /** The neutral example target the presentation page measures its demo distances to. */
 export const DEMO_TARGET = 'your university';
 
+/** Generic example photos (public/demo, see the README credits), relative so the page works under any prefix. */
+export const DEMO_PHOTOS = {
+  hero: './demo/hero-street.webp',
+  living: './demo/living-room.webp',
+  kitchen: './demo/kitchen.webp',
+  bedroom: './demo/bedroom.webp',
+};
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 
@@ -22,7 +30,7 @@ export function demoListings(now = Date.now()) {
     availableUntil: null,
     distanceKm: 1.4,
     geoPrecision: 'address',
-    image: null,
+    image: DEMO_PHOTOS.living,
     photoFallback: 'Example photo',
     publishedAt: now - 22 * MINUTE,
     firstSeenAt: now - 20 * MINUTE,
@@ -77,6 +85,7 @@ export function demoListings(now = Date.now()) {
     distanceKm: 2.1,
     publishedAt: now - 3 * HOUR,
     firstSeenAt: now - 3 * HOUR,
+    image: DEMO_PHOTOS.kitchen,
     flatmates: null,
     wgSize: 6,
     tier: null,
@@ -110,7 +119,26 @@ export function demoListings(now = Date.now()) {
     },
   };
 
-  return { scoring, verbindung };
+  const flat = {
+    ...scoring,
+    id: -3,
+    title: 'Sunny room in a 4er WG (example)',
+    price: 540,
+    size: 14,
+    district: 'Haidhausen',
+    street: 'Probestraße',
+    distanceKm: 3.2,
+    image: DEMO_PHOTOS.bedroom,
+    publishedAt: now - 50 * MINUTE,
+    firstSeenAt: now - 48 * MINUTE,
+    wgSize: 4,
+    flatmates: { wgSize: 4, female: 2, male: 1, diverse: 0, unspecified: 0, raw: null },
+    tier: 'good',
+    notifiedKind: 'bulk',
+    evaluation: { ...scoring.evaluation, overall: 7.3 },
+  };
+
+  return { scoring, verbindung, flat };
 }
 
 const bins = (from, step, counts) =>

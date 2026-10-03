@@ -157,8 +157,20 @@ Verbindung detection, the charts and filters, the alerts and the settings, the p
 an account at leo@brucker.fr", and the license note). Its "Log in" opens the login form (`#/login`); the login screen
 has a "What is this?" button back to it (`#/about`), and a logged-in user opens it with "About" in the header. The routes
 are hash-only, so the page works at `/` and under `/wgg/`; the server serves `index.html` without a session, and every
-API call except `/api/health` still needs one. The examples are static, made-up data (no real listing, photo or address)
+API call except `/api/health` still needs one. The examples are static, made-up data (no real listing or address; generic stock photos, see the credits below)
 and the page makes no API call of its own (the app asks `/api/me` once on load to know whether a session exists).
+
+### Demo photos
+
+The presentation page uses generic stock photos from Unsplash (free under the
+[Unsplash License](https://unsplash.com/license)), stored resized as WebP in `public/demo/`. None comes from a listing site.
+
+| File | Photo | Photographer |
+| --- | --- | --- |
+| `hero-street.webp` | [Colorful historic buildings line a european city street](https://unsplash.com/photos/colorful-historic-buildings-line-a-european-city-street-Wr7v9sMRsN8) (Wrocław) | Roman Vasylovskyi |
+| `living-room.webp` | [A living room filled with furniture and decor](https://unsplash.com/photos/a-living-room-filled-with-furniture-and-decor-MfuqFoaDtlU) | Paul Esch-Laurent |
+| `kitchen.webp` | [Brown wooden table near window](https://unsplash.com/photos/brown-wooden-table-near-window-bklWX3uwD9c) | Bluewater Sweden |
+| `bedroom.webp` | [White bed near white window](https://unsplash.com/photos/white-bed-near-white-window-ABohRftG_Os) (Berlin) | Julia (beazy) |
 
 ## Accounts and login
 

@@ -8,7 +8,15 @@ import ListingCard from './ListingCard.jsx';
 import ScoreBreakdown from './ScoreBreakdown.jsx';
 import { TierIcon, TierLabel } from './TierBadge.jsx';
 import WeightsPie from './options/WeightsPie.jsx';
-import { DEMO_PARAMETERS, DEMO_TARGET, demoEmail, demoListings, demoStats, demoWeights } from '../services/demo.js';
+import {
+  DEMO_PARAMETERS,
+  DEMO_PHOTOS,
+  DEMO_TARGET,
+  demoEmail,
+  demoListings,
+  demoStats,
+  demoWeights,
+} from '../services/demo.js';
 import { formatRent } from '../services/format.js';
 import '../About.less';
 
@@ -138,7 +146,7 @@ function SettingsMock() {
  */
 export default function About({ onLogin, theme, onToggleTheme, loggedIn = false, onBack }) {
   const [now] = useState(Date.now);
-  const { scoring, verbindung } = demoListings(now);
+  const { scoring, verbindung, flat } = demoListings(now);
   const stats = demoStats();
   const [mode, setMode] = useState('fantastic');
 
@@ -174,31 +182,41 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
 
       <main>
         <section className="about__hero" aria-labelledby="about-title">
-          <h1 id="about-title">
-            <span className="about__sr">WG Gefunden! </span>
-            <span aria-hidden="true">
-              <span className="brand__wg">WG</span> Gefunden<span className="brand__bang">!</span>
-            </span>
-          </h1>
-          <p className="about__tagline">
-            Your private WG-Gesucht scout for any city: it watches new offers, reads them for you and only pings you
-            about the good ones.
-          </p>
-          <div className="about__cta">
-            {!loggedIn && (
-              <Button theme="solid" type="primary" size="large" onClick={onLogin}>
-                Log in
+          <img
+            className="about__hero-photo"
+            src={DEMO_PHOTOS.hero}
+            alt="Colourful old-town buildings along a quiet European street (generic stock photo)"
+            width="1200"
+            height="800"
+            fetchPriority="high"
+          />
+          <div className="about__hero-body">
+            <h1 id="about-title">
+              <span className="about__sr">WG Gefunden! </span>
+              <span aria-hidden="true">
+                <span className="brand__wg">WG</span> Gefunden<span className="brand__bang">!</span>
+              </span>
+            </h1>
+            <p className="about__tagline">
+              Your private WG-Gesucht scout for any city. It watches new offers, has an AI read each ad and only emails
+              you about the good ones.
+            </p>
+            <div className="about__cta">
+              {!loggedIn && (
+                <Button theme="solid" type="primary" size="large" onClick={onLogin}>
+                  Log in
+                </Button>
+              )}
+              <Button
+                theme="light"
+                size="large"
+                icon={<IconArrowDown />}
+                iconPosition="right"
+                onClick={() => scrollToId('how')}
+              >
+                How it works
               </Button>
-            )}
-            <Button
-              theme="light"
-              size="large"
-              icon={<IconArrowDown />}
-              iconPosition="right"
-              onClick={() => scrollToId('how')}
-            >
-              How it works
-            </Button>
+            </div>
           </div>
         </section>
 
@@ -207,9 +225,10 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
         <Feature
           id="scoring"
           title="Smart scoring"
-          intro="Every new offer is scored from 1 to 10 on what matters to you: rent, distance to your target, how fresh it is, how long you can stay. Stars for the numbers, circles for the AI's opinion."
+          intro="Every new offer is scored from 1 to 10 on what matters to you: rent, distance, freshness and how long you can stay. Stars are the numbers, circles are the AI's opinion."
           points={[
             'Open the details to see why an offer got its score',
+            'Distance is measured to your own target (university, office, anywhere)',
             'New offers wear a NEW tag for their first hour',
           ]}
         >
@@ -236,8 +255,9 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
         <Feature
           id="ai"
           title="An AI reads every ad"
-          intro="A language model reads the full text against your profile and writes a short verdict: a fit score, a summary, green flags and red flags. It also notices when an ad rules you out, so you do not waste a message."
+          intro="A language model reads the full ad against your profile: a fit score, a summary, green and red flags. Open 'Why not 10?' to see exactly which points were deducted, and why."
           points={[
+            'Spots ads that rule you out, so you do not waste a message',
             'Runs on a model you control, only the ad text is sent',
             'Re-reads the offers when you change your profile',
           ]}
@@ -255,9 +275,12 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
 
         <Feature
           id="verbindung"
-          title="Verbindung detection"
-          intro="Cheap rooms in fraternity houses (Studentenverbindungen) are not always labelled as such. The AI estimates the probability, quotes the phrases that gave it away and, above your threshold, removes the ad from your list."
-          points={['You can still show removed offers and restore them']}
+          title="Auto-reject: Verbindungen and short-term rentals"
+          intro="Cheap rooms in fraternity houses (Studentenverbindungen) are rarely labelled as such. A word list catches the obvious ones, the AI estimates the probability and quotes the giveaway phrases. Above your threshold the ad leaves your list."
+          points={[
+            'Short-term and temporary rentals are filtered out too',
+            'You can still show removed offers and restore them',
+          ]}
         >
           <Example>
             <div className="about__tile">
@@ -277,6 +300,30 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
             </div>
             <div className="about__panel">
               <AiAssessment llm={verbindung.llm} badgeThreshold={BADGE_THRESHOLD} now={now} />
+            </div>
+          </Example>
+        </Feature>
+
+        <Feature
+          id="flat"
+          title="Know the flat before you write"
+          intro="Cards show who lives there (how many flatmates, and how many women and men), the distance to your target and the tier the offer reached."
+        >
+          <Example>
+            <div className="about__tile">
+              <div inert>
+                <ListingCard
+                  item={flat}
+                  sort="overall"
+                  selected={false}
+                  onSelect={noop}
+                  onDismiss={noop}
+                  onMessaged={noop}
+                  onRestore={noop}
+                  badgeThreshold={BADGE_THRESHOLD}
+                  targetName={DEMO_TARGET}
+                />
+              </div>
             </div>
           </Example>
         </Feature>
@@ -319,7 +366,7 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
         <Feature
           id="alerts"
           title="Alerts that respect your inbox"
-          intro="You decide what is worth an email. Two rules, two behaviours."
+          intro="Each tier has its own email switch and its own send window. Mail that is due outside the window waits and arrives as one morning email."
         >
           <Example>
             <div className="about__alerts">
@@ -327,14 +374,14 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
                 <h3>
                   <TierIcon tier="fantastic" size={16} /> Fantastic
                 </h3>
-                <p>One email right away, as soon as the AI has read the ad.</p>
+                <p>One email as soon as the AI has read the ad, inside your send window.</p>
                 <MailMock kind="fantastic" />
               </div>
               <div>
                 <h3>
                   <TierIcon tier="good" size={16} /> Good
                 </h3>
-                <p>Collected into one digest, once per round.</p>
+                <p>Collected into one digest per round, inside its window.</p>
                 <MailMock kind="good" />
               </div>
             </div>
@@ -354,10 +401,11 @@ export default function About({ onLogin, theme, onToggleTheme, loggedIn = false,
         <section className="about__polite" aria-labelledby="polite-title">
           <h2 id="polite-title">Polite by design</h2>
           <ul>
-            <li>One search round every 30 minutes, with random jitter.</li>
-            <li>One detail page per minute at most.</li>
+            <li>One search round every 30 minutes, give or take a random jitter.</li>
+            <li>One detail page per minute at most; a manual fetch needs a 10-minute gap.</li>
             <li>Backs off when a bot wall shows up; it never tries to get around one.</li>
             <li>One search per user, so the load stays small.</li>
+            <li>Accounts are by invitation only, which keeps it a small private tool.</li>
           </ul>
         </section>
 
