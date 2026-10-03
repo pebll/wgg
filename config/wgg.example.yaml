@@ -55,11 +55,14 @@ notify:
   maxAgeHours: 24 # ignore listings posted (else first seen) longer ago than this
   # Fantastic offers (key `priority`): ONE email right after the AI assessment of a listing.
   priority:
+    window: { from: 7, to: 23 } # instant only in these local hours (0-24); otherwise one morning mail at `from`
     rules:
       - { overall: { gt: 7 }, ai: { gt: 7 } }
       # Example of an extra rule (OR): a fairly good and cheap room is Fantastic too
       # - { overall: { gt: 5 }, rent: { lt: 700 } }
   # Good offers (key `bulk`): ONE digest email once the detail + AI queues are done after a fetch (Fantastic ones are skipped).
   bulk:
+    window: { from: 7, to: 23 } # digest slots: from + k * intervalHours, at most `to`; outside: one morning digest
+    intervalHours: 1
     rules:
       - { overall: { gt: 5 }, ai: { gt: 5 } }

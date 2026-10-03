@@ -213,7 +213,7 @@ its own **Save** and **Reset to default** (reset fills the fields with the defau
   AI assessment) and **Good** offers (collected into one digest) as two numbers each, "Score >" and "AI score >" (stored as the rules
   `[{overall: {gt: x}, ai: {gt: y}}]`; an empty field is ignored). Rules that are more complex than that (several rules,
   other fields such as rent or distance) are shown read-only as JSON, "edit in config" (`notify` in `config/wgg.yaml` is
-  the default for new users). Also the maximum age of an announced offer. **Send test mail** mails the saved address and
+  the default for new users). The send windows (two-handle sliders) and the Good interval; the Good slider shows a tick at every send slot. Also the maximum age of an announced offer. **Send test mail** mails the saved address and
   shows why it cannot (no address, server without SMTP, too many tests).
 - **AI profile.** The text the local LLM reads each offer against (who moves in, budget, how long you stay, deal-breakers),
   and the switch that hides offers the AI finds not eligible (they stay listed under "Show removed automatically"). New
@@ -487,6 +487,26 @@ the AI). Two tiers, both configured under `notify:` in `config/wgg.yaml` (see `c
 switch "All email alerts"). A switched-off tier sends nothing and marks nothing, its offers are not moved into the other
 mail, and its thresholds still drive the tier filter; switching it back on announces only offers still within
 `notify.maxAgeHours`.
+
+**Send schedule.** When mails may go out is set per user in Options › Notifications with sliders (hours of the day,
+**server local time**; the Docker image runs with `TZ=Europe/Berlin`). Defaults: 7:00 to 23:00 for both tiers, Good once
+an hour.
+
+- **Fantastic** (`notify.priority.window: {from: 7, to: 23}`): instant inside the window, as before. A Fantastic offer
+  that qualifies outside it is not sent and not marked; when the window opens (07:00) ONE combined mail
+  "✦ N Fantastic offers overnight" goes out (a single waiting offer uses the normal layout).
+- **Good** (`notify.bulk.window` and `notify.bulk.intervalHours: 1`): a digest only at a *slot*, `from + k * interval`
+  inside the window (7:00, 8:00, ... 23:00 for 1 h; 7, 10, 13, 16, 19, 22 for 3 h; the sliders show the slots as ticks),
+  at most one per slot, and, as before, only when the detail and AI queues are idle. Offers that arrive outside the
+  window are collected into one digest at the first slot (the window start).
+- A timer in `wgg run` checks every minute (a few SQL reads, no WG-Gesucht requests) whether a morning mail or a slot
+  is due, and once at startup. The last slot per user is stored in `notify_schedule`, claimed before sending and given
+  back when the send fails, so a restart never sends a slot twice.
+- **Age limit.** An offer that had to wait is judged by its age when its AI assessment was stored, as long as that was
+  at most one closed window (plus the Good interval) ago, so `notify.maxAgeHours` never drops the offers of the night.
+- The same keys under `notify.priority` / `notify.bulk` in `config/wgg.yaml` set the defaults for new users.
+  `wgg notify --dry-run` lists what the schedule holds back, e.g. `alice: 3 fantastic queued until 07:00 (tomorrow)`;
+  `wgg notify` itself follows the schedule too.
 
 **Naming.** The names in the UI and in the mails are Fantastic (config `notify.priority`, `notified_kind = 'priority'`)
 and Good (config `notify.bulk`, `notified_kind = 'bulk'`). The config keys and the stored values keep their old names, so
