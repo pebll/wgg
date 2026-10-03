@@ -99,6 +99,23 @@ describe('#validateSettingsUpdate', () => {
       });
     });
 
+    it('accepts the send windows and the Good interval, and rejects nonsense', () => {
+      const next = update({
+        notify: { priority: { window: { from: 8, to: 22 } }, bulk: { window: { from: 0, to: 24 }, intervalHours: 3 } },
+      }).notify;
+      expect(next.priority.window).toEqual({ from: 8, to: 22 });
+      expect(next.bulk).toMatchObject({ window: { from: 0, to: 24 }, intervalHours: 3 });
+      expect(update({ notify: {} }).notify.bulk.window).toEqual({ from: 7, to: 23 });
+      fails({ notify: { priority: { window: { from: 9, to: 9 } } } }, /notify\.priority\.window/);
+      fails({ notify: { priority: { window: { from: 5, to: 25 } } } }, /notify\.priority\.window/);
+      fails({ notify: { bulk: { window: { from: 7.5, to: 20 } } } }, /notify\.bulk\.window/);
+      fails({ notify: { bulk: { window: { from: 12, to: 8 } } } }, /notify\.bulk\.window/);
+      fails({ notify: { bulk: { intervalHours: 0 } } }, /notify\.bulk\.intervalHours/);
+      fails({ notify: { bulk: { intervalHours: 25 } } }, /notify\.bulk\.intervalHours/);
+      fails({ notify: { bulk: { intervalHours: 1.5 } } }, /notify\.bulk\.intervalHours/);
+      fails({ notify: { priority: { window: { from: 7, to: 23, step: 2 } } } }, /window/);
+    });
+
     it('accepts the per-tier switches, defaulting to on, and rejects non-booleans', () => {
       expect(current().notify.priority.enabled).toBe(true);
       const next = update({ notify: { priority: { enabled: false } } }).notify;

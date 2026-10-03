@@ -206,4 +206,24 @@ describe('#config', () => {
       expect(() => cfgWith(Infinity)).toThrow(ConfigError);
     });
   });
+
+  describe('notify send schedule defaults', () => {
+    const notifyWith = (notify) => parseConfig({ searches: [{ url: URL1 }], notify }).notify;
+
+    it('default to 7-23 h and a one hour Good interval', () => {
+      const n = notifyWith({});
+      expect(n.priority.window).toEqual({ from: 7, to: 23 });
+      expect(n.bulk.window).toEqual({ from: 7, to: 23 });
+      expect(n.bulk.intervalHours).toBe(1);
+    });
+
+    it('can be set per tier and are validated', () => {
+      const n = notifyWith({ priority: { window: { from: 6, to: 24 } }, bulk: { intervalHours: 4 } });
+      expect(n.priority.window).toEqual({ from: 6, to: 24 });
+      expect(n.priority.rules).toEqual(notifyWith({}).priority.rules);
+      expect(n.bulk.intervalHours).toBe(4);
+      expect(() => notifyWith({ priority: { window: { from: 9, to: 9 } } })).toThrow(/notify\.priority\.window/);
+      expect(() => notifyWith({ bulk: { intervalHours: 0 } })).toThrow(/notify\.bulk\.intervalHours/);
+    });
+  });
 });

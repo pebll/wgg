@@ -29,8 +29,13 @@ describe('#user settings defaults', () => {
     expect(s.notify).toEqual({
       email: 'leo@example.org',
       enabled: true,
-      priority: { enabled: true, rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }] },
-      bulk: { enabled: true, rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }] },
+      priority: { enabled: true, rules: [{ overall: { gt: 7 }, ai: { gt: 7 } }], window: { from: 7, to: 23 } },
+      bulk: {
+        enabled: true,
+        rules: [{ overall: { gt: 5 }, ai: { gt: 5 } }],
+        window: { from: 7, to: 23 },
+        intervalHours: 1,
+      },
       maxAgeHours: 24,
     });
   });
@@ -91,5 +96,25 @@ describe('#llmSettingsHash', () => {
     expect(llmSettingsHash({ model: 'm', profile: 'Anna' })).not.toBe(base);
     expect(llmSettingsHash({ model: 'm', profile: 'Leo', promptVersion: PROMPT_VERSION + 1 })).not.toBe(base);
     expect(base).toMatch(/^[0-9a-f]{16}$/);
+  });
+});
+
+describe('#send schedule defaults', () => {
+  it('start every user at 7-23 h, Good once an hour, and follow the config defaults', () => {
+    const custom = parseConfig({
+      searches: [{ url: 'https://www.wg-gesucht.de/x.html' }],
+      notify: { priority: { window: { from: 8, to: 22 } }, bulk: { window: { from: 9, to: 21 }, intervalHours: 3 } },
+    }).notify;
+    const s = defaultUserSettings({ evaluation: evaluation(), notify: custom });
+    expect(s.notify.priority.window).toEqual({ from: 8, to: 22 });
+    expect(s.notify.bulk.window).toEqual({ from: 9, to: 21 });
+    expect(s.notify.bulk.intervalHours).toBe(3);
+  });
+
+  it('are merged into the stored settings of users who saved before the schedule existed', () => {
+    const defaults = defaultUserSettings({ evaluation: evaluation(), notify: notify() });
+    const merged = mergeSettings(defaults, { notify: { priority: { enabled: false, rules: [] }, bulk: { rules: [] } } });
+    expect(merged.notify.priority).toEqual({ enabled: false, rules: [], window: { from: 7, to: 23 } });
+    expect(merged.notify.bulk.intervalHours).toBe(1);
   });
 });
