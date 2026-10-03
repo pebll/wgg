@@ -4,7 +4,7 @@ import Section, { Field } from './Section.jsx';
 import { errorMessage, xhrSend } from '../../services/xhr.js';
 import { formatRetryAfter } from '../../services/format.js';
 import { TierLabel } from '../TierBadge.jsx';
-import { LABEL_MARKS, formatHour, slotMarks, summarizeBulk, summarizePriority } from '../../services/schedule.js';
+import { LABEL_MARKS, formatHour, slotTicks, summarizeBulk, summarizePriority } from '../../services/schedule.js';
 import { notifyBody, notifyToForm, validateNotifyForm } from '../../services/options.js';
 
 /** The switch row of one tier: a tier that is off sends no mail, but its thresholds still define the tier filter. */
@@ -55,26 +55,31 @@ function Thresholds({ label, hint, enabled, value, onChange }) {
 }
 
 /**
- * "When may mails go out": a two-handle slider over the 24 h day (tooltip "07:00"). `marks` are the labels under it;
- * for the Good tier they also carry the ticks at every send slot. `summary` is the sentence under the slider.
+ * "When may mails go out": a two-handle slider over the 24 h day (tooltip "07:00") with the same hour labels under
+ * every slider. `ticks` (Good only) are strokes on the track at the send slots. `summary` is the sentence under it.
  */
-function WindowSlider({ label, enabled, value, onChange, marks, summary, ticks = false, children }) {
+function WindowSlider({ label, enabled, value, onChange, summary, ticks = [], children }) {
   return (
     <div className={`options__group${enabled ? '' : ' options__muted'}`}>
       <strong>{label}</strong>
-      <div className={`options__slider options__slider--hours${ticks ? ' options__slider--ticks' : ''}`}>
-        <Slider
-          range
-          min={0}
-          max={24}
-          step={1}
-          value={value}
-          marks={marks}
-          tipFormatter={formatHour}
-          getAriaValueText={formatHour}
-          aria-label={label}
-          onChange={onChange}
-        />
+      <div className="options__slider options__slider--hours">
+        <div className="options__track">
+          <Slider
+            range
+            min={0}
+            max={24}
+            step={1}
+            value={value}
+            marks={LABEL_MARKS}
+            tipFormatter={formatHour}
+            getAriaValueText={formatHour}
+            aria-label={label}
+            onChange={onChange}
+          />
+          {ticks.map((t) => (
+            <span key={t.hour} className="options__slot-tick" style={{ left: `${t.left}%` }} aria-hidden="true" />
+          ))}
+        </div>
       </div>
       {children}
       <div className="options__hint" aria-live="polite">
@@ -183,7 +188,6 @@ export default function NotificationsSection({ settings, defaults, save }) {
         enabled={form.priorityEnabled}
         value={form.priorityWindow}
         onChange={(priorityWindow) => set({ priorityWindow })}
-        marks={LABEL_MARKS}
         summary={summarizePriority({ from: form.priorityWindow[0], to: form.priorityWindow[1] })}
       />
       <TierHeader
@@ -209,8 +213,7 @@ export default function NotificationsSection({ settings, defaults, save }) {
         enabled={form.bulkEnabled}
         value={form.bulkWindow}
         onChange={(bulkWindow) => set({ bulkWindow })}
-        marks={slotMarks({ from: form.bulkWindow[0], to: form.bulkWindow[1] }, form.bulkInterval)}
-        ticks
+        ticks={slotTicks({ from: form.bulkWindow[0], to: form.bulkWindow[1] }, form.bulkInterval)}
         summary={summarizeBulk({ from: form.bulkWindow[0], to: form.bulkWindow[1] }, form.bulkInterval)}
       >
         <strong>Good: one digest every {form.bulkInterval} h</strong>

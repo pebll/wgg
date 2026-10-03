@@ -105,12 +105,10 @@ export function summarizeBulk(window, intervalHours) {
 export const LABEL_MARKS = Object.freeze({ 0: '00', 6: '06', 12: '12', 18: '18', 24: '24' });
 
 /**
- * Slider marks of the Good window: the hour labels plus an unlabelled tick (a "Strich") at every send slot, so the gaps
- * between the mails are visible. Nothing but the labels for an impossible window.
+ * The ticks (a "Strich") of the Good window slider: one per send slot, as a share of the 24 h track. They are drawn on
+ * top of the slider, so the hour labels keep Semi's default look on both sliders. None for an impossible window.
  */
-export function slotMarks(window, intervalHours) {
-  if (!isValidWindow(window) || !isValidInterval(intervalHours)) return { ...LABEL_MARKS };
-  const marks = { ...LABEL_MARKS };
-  for (const h of slotHours(window, intervalHours)) if (!(h in marks)) marks[h] = '';
-  return Object.fromEntries(Object.entries(marks).sort(([a], [b]) => a - b));
+export function slotTicks(window, intervalHours) {
+  if (!isValidWindow(window) || !isValidInterval(intervalHours)) return [];
+  return slotHours(window, intervalHours).map((hour) => ({ hour, left: (hour / 24) * 100 }));
 }

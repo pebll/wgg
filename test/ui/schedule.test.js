@@ -15,7 +15,7 @@ import {
   summarizePriority,
   summarizeBulk,
   LABEL_MARKS,
-  slotMarks,
+  slotTicks,
 } from '../../ui/src/services/schedule.js';
 
 const at = (h, m = 0, day = 2) => new Date(2026, 9, day, h, m, 0, 0).getTime();
@@ -114,15 +114,15 @@ describe('#slider marks', () => {
   it('labels the day at 0, 6, 12, 18 and 24 h', () => {
     expect(LABEL_MARKS).toEqual({ 0: '00', 6: '06', 12: '12', 18: '18', 24: '24' });
   });
-  it('adds an unlabelled tick (Strich) for every send slot, keeping the labels', () => {
-    const marks = slotMarks(W, 3);
-    expect(Object.keys(marks).map(Number)).toEqual([0, 6, 7, 10, 12, 13, 16, 18, 19, 22, 24]);
-    expect(marks[7]).toBe('');
-    expect(marks[13]).toBe('');
-    expect(marks[6]).toBe('06'); // a slot on a label keeps its label
-    expect(Object.keys(slotMarks(W, 1))).toHaveLength(20); // 17 slots (12 and 18 are labelled ones), plus 0, 6 and 24
+  it('puts a tick (Strich) at every send slot as a share of the 24 h track', () => {
+    expect(slotTicks(W, 3).map((t) => t.hour)).toEqual([7, 10, 13, 16, 19, 22]);
+    expect(slotTicks(W, 3)[0].left).toBeCloseTo((7 / 24) * 100);
+    expect(slotTicks(W, 6).map((t) => t.hour)).toEqual([7, 13, 19]);
+    expect(slotTicks({ from: 6, to: 18 }, 6).map((t) => t.hour)).toEqual([6, 12, 18]); // a slot on a label still ticks
+    expect(slotTicks(W, 1)).toHaveLength(17);
   });
   it('shows no ticks for an impossible selection', () => {
-    expect(slotMarks({ from: 9, to: 9 }, 1)).toEqual(LABEL_MARKS);
+    expect(slotTicks({ from: 9, to: 9 }, 1)).toEqual([]);
+    expect(slotTicks(W, 0)).toEqual([]);
   });
 });

@@ -1308,14 +1308,20 @@ body[theme-mode='dark'] .tier-badge--fantastic {
       padding-bottom: 28px; // room for the hour labels under the slider
     }
 
-    // The Good send slots: thin vertical strokes on the track instead of Semi's round dots.
-    &--ticks .semi-slider-dot,
-    &--ticks .semi-slider-dot-active {
+    .options__track {
+      position: relative;
+    }
+
+    // The Good send slots: thin strokes over the track. The hour labels keep Semi's default look on every slider.
+    .options__slot-tick {
+      position: absolute;
       top: 10px;
       width: 2px;
       height: 12px;
+      margin-left: -1px;
       border-radius: 1px;
       background-color: var(--semi-color-text-2);
+      pointer-events: none;
     }
 
     &--weight {
