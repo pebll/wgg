@@ -1,0 +1,18 @@
+# Accounts for wgg. Copy to config/users.yaml (gitignored) and edit it. Only you (the admin) create accounts: there is
+# no self-registration. wgg refuses to start (run / serve) without this file. Restart wgg after changing it.
+#
+# 1. Create a password hash:   node bin/wgg.js hash-password      (asks for the password, hidden; at least 10 characters)
+#    or for scripts:           printf '%s' "the password" | node bin/wgg.js hash-password
+# 2. Paste the printed line as passwordHash below (never the password itself).
+# 3. Put a long random SESSION_SECRET into .env (it signs the login cookie):   openssl rand -hex 32
+#
+# username  lowercase letters, digits, ".", "_", "-" (1-32 characters); it is the stable id of the account.
+# admin     true for at least one account. The FIRST admin owns everything wgg collected before accounts existed
+#           (evaluations, AI assessments, hidden and messaged offers) and its search queries are the default for new users.
+# email     optional: where this user's alerts go by default (editable later under Options). The admin falls back to
+#           MAIL_TO from .env.
+users:
+  - username: leo
+    admin: true
+    email: you@example.org
+    passwordHash: "scrypt$32768$8$1$<salt>$<hash>   # replace with the output of: wgg hash-password"

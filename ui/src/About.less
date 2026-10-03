@@ -1,0 +1,339 @@
+// The public presentation page. Colors come from Semi's CSS variables (light/dark) and the --wgg-brand tokens.
+.about {
+  --about-gap: clamp(32px, 6vw, 72px);
+
+  min-height: 100vh;
+  color: var(--semi-color-text-0);
+
+  a {
+    color: var(--semi-color-link);
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex='-1']:focus-visible {
+    outline: 2px solid var(--semi-color-primary);
+    outline-offset: 2px;
+  }
+
+  &__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  &__bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px clamp(16px, 4vw, 40px);
+    background: var(--semi-color-bg-0);
+    border-bottom: 1px solid var(--semi-color-border);
+
+    &-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  &__hero {
+    padding: var(--about-gap) 0;
+    text-align: center;
+
+    h1 {
+      margin: 0;
+      font-size: clamp(40px, 8vw, 72px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+
+      .brand__wg {
+        font-weight: 800;
+      }
+
+      .brand__bang {
+        font-weight: 800;
+        color: var(--wgg-brand);
+      }
+    }
+  }
+
+  &__tagline {
+    max-width: 38em;
+    margin: 20px auto 28px;
+    font-size: clamp(17px, 2.4vw, 21px);
+    line-height: 1.5;
+    color: var(--semi-color-text-1);
+  }
+
+  &__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  &__anchor {
+    scroll-margin-top: 70px;
+    outline: none;
+  }
+
+  &__feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: clamp(20px, 4vw, 48px);
+    align-items: center;
+    padding: var(--about-gap) 0;
+    border-top: 1px solid var(--semi-color-border);
+
+    &:nth-of-type(even) {
+      .about__text {
+        order: 2;
+      }
+    }
+
+    @media (max-width: 860px) {
+      grid-template-columns: minmax(0, 1fr);
+
+      &:nth-of-type(even) .about__text {
+        order: 0;
+      }
+    }
+  }
+
+  &__text {
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 4vw, 32px);
+    }
+
+    p {
+      margin: 0 0 12px;
+      font-size: 17px;
+      line-height: 1.55;
+      color: var(--semi-color-text-1);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--semi-color-text-1);
+      line-height: 1.6;
+    }
+  }
+
+  &__example {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 16px;
+    border-radius: var(--semi-border-radius-large);
+    background: var(--semi-color-fill-0);
+    border: 1px dashed var(--semi-color-border);
+
+    figcaption {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--semi-color-text-2);
+    }
+  }
+
+  &__tile {
+    max-width: 380px;
+    width: 100%;
+    margin: 0 auto;
+
+    .card__photo--empty {
+      background: linear-gradient(135deg, rgba(242, 99, 58, 0.25), rgba(59, 130, 246, 0.2));
+    }
+  }
+
+  &__panel {
+    padding: 12px 16px;
+    border-radius: var(--semi-border-radius-large);
+    background: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+
+    &--small {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+
+  &__note {
+    font-size: 13px;
+    color: var(--semi-color-text-2);
+  }
+
+  &__charts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__alerts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 4px;
+    }
+
+    p {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--semi-color-text-1);
+    }
+  }
+
+  &__mail {
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    overflow: hidden;
+    font-size: 13px;
+
+    &-subject {
+      padding: 8px 10px;
+      font-weight: 600;
+      background: var(--semi-color-fill-1);
+      overflow-wrap: anywhere;
+    }
+
+    &--fantastic &-subject {
+      color: var(--wgg-brand-strong);
+    }
+
+    &-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    &-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      color: var(--semi-color-text-1);
+
+      span:first-child {
+        font-weight: 600;
+        color: var(--semi-color-text-0);
+      }
+    }
+  }
+
+  &__settings,
+  &__weights {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--semi-color-text-1);
+  }
+
+  &__input {
+    padding: 8px 12px;
+    font: inherit;
+    color: var(--semi-color-text-0);
+    background: var(--semi-color-fill-0);
+    border: 1px solid var(--semi-color-border);
+    border-radius: var(--semi-border-radius-small);
+  }
+
+  &__weight {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__polite,
+  &__join {
+    padding: var(--about-gap) 0;
+    border-top: 1px solid var(--semi-color-border);
+    text-align: center;
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 4vw, 32px);
+    }
+
+    ul {
+      display: inline-block;
+      margin: 0;
+      padding-left: 20px;
+      text-align: left;
+      line-height: 1.8;
+      color: var(--semi-color-text-1);
+    }
+
+    p {
+      margin: 0 0 20px;
+      font-size: 19px;
+    }
+  }
+
+  &__footer {
+    padding: 24px 16px 40px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--semi-color-text-2);
+    border-top: 1px solid var(--semi-color-border);
+
+    p {
+      max-width: 52em;
+      margin: 4px auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

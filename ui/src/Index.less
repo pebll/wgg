@@ -1,0 +1,1479 @@
+// Colors come from Semi's CSS variables (--semi-color-*), which switch with body[theme-mode='dark'].
+// Score badge colors are the only custom palette; they are readable on both themes.
+
+// Brand: coral accent (#F2633A). Fixed in both themes; buttons use the darker shade so white text keeps contrast.
+// Score colors (green/amber/red) are separate and unchanged.
+:root {
+  --wgg-brand: #f2633a;
+  --wgg-brand-strong: #d9481f;
+  --wgg-brand-contrast: #fff;
+}
+
+body,
+body[theme-mode='dark'] {
+  --semi-color-primary: var(--wgg-brand-strong);
+  --semi-color-primary-hover: #c43f19;
+  --semi-color-primary-active: #ab3513;
+  --semi-color-link: var(--wgg-brand-strong);
+  --semi-color-link-hover: #c43f19;
+  --semi-color-link-active: #ab3513;
+  --semi-color-primary-light-default: rgba(242, 99, 58, 0.14);
+}
+
+body[theme-mode='dark'] {
+  --semi-color-primary: var(--wgg-brand);
+  --semi-color-primary-hover: #f67d58;
+  --semi-color-primary-active: #f99274;
+  --semi-color-link: #f67d58;
+  --semi-color-link-hover: #f99274;
+  --semi-color-link-active: #fbab94;
+  --semi-color-primary-light-default: rgba(242, 99, 58, 0.22);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+
+  &__mark {
+    flex: none;
+  }
+
+  &__word {
+    font-family:
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  &__wg {
+    font-weight: 800;
+  }
+
+  &__name {
+    font-weight: 500;
+  }
+
+  &__bang {
+    font-weight: 800;
+    color: var(--wgg-brand);
+  }
+}
+
+body,
+html {
+  margin: 0;
+  background: var(--semi-color-bg-0);
+  color: var(--semi-color-text-0);
+  font-family: var(--semi-font-family, system-ui, sans-serif);
+}
+
+.app {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 16px;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    margin: 0;
+    flex: 1;
+  }
+
+  &__count {
+    color: var(--semi-color-text-1);
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+  }
+
+  &__filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--semi-color-text-1);
+  }
+
+  &__muted {
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+
+  &__error {
+    margin-bottom: 12px;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+
+  &__pager {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  &__empty {
+    padding: 48px 0;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--semi-border-radius-large);
+  background: var(--semi-color-bg-1);
+  border: 1px solid var(--semi-color-border);
+  box-shadow: var(--semi-shadow-elevated);
+
+  &--excluded {
+    opacity: 0.7;
+
+    .card__title a,
+    .card__title {
+      text-decoration: line-through;
+    }
+  }
+
+  &__media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: var(--semi-color-fill-0);
+  }
+
+  &__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+
+    &--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--semi-color-text-2);
+      font-size: 13px;
+    }
+  }
+
+  &__new {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 8px;
+    border-radius: var(--semi-border-radius-medium);
+    background: #dc2626;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    animation: card-new-blink 1.2s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__score {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 54px;
+    padding: 4px 8px;
+    border-radius: var(--semi-border-radius-medium);
+    color: #fff;
+    line-height: 1.1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    background: #6b7280;
+
+    &--good {
+      background: #15803d;
+    }
+
+    &--ok {
+      background: #b45309;
+    }
+
+    &--bad {
+      background: #b91c1c;
+    }
+
+    &--neutral {
+      background: #1f4e79;
+    }
+
+    &--excluded,
+    &--none {
+      background: #6b7280;
+    }
+  }
+
+  &__score-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  &__score-label {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    flex: 1;
+  }
+
+  &__title {
+    margin: 0 0 4px;
+    font-size: 16px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+
+    a {
+      color: var(--semi-color-text-0);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--semi-color-link);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+
+    strong {
+      font-size: 16px;
+    }
+  }
+
+  &__distance {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  &__muted {
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 2px;
+  }
+
+  &__toggle {
+    align-self: flex-start;
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--semi-color-link);
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  &__breakdown {
+    border-top: 1px solid var(--semi-color-border);
+  }
+}
+
+.listing {
+  &__title {
+    font-weight: 600;
+  }
+
+  &__muted {
+    color: var(--semi-color-text-2);
+  }
+}
+
+.breakdown {
+  padding: 8px 12px;
+
+  &__overall,
+  &__note {
+    margin-bottom: 8px;
+  }
+
+  &__list {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+}
+
+// Dashboard layout: tile list on the left, sticky detail panel on the right (stacked below 1024px).
+.app__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 1023px) {
+    grid-template-columns: minmax(0, 1fr);
+
+    .detail {
+      order: -1;
+      position: static;
+      max-height: none;
+    }
+  }
+}
+
+.app__list {
+  min-width: 0;
+}
+
+.status {
+  color: var(--semi-color-text-1);
+  font-size: 13px;
+
+  &__info {
+    display: inline-flex;
+    padding: 2px;
+    border: 0;
+    background: none;
+    color: var(--semi-color-text-2);
+    cursor: help;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--semi-color-text-0);
+    }
+  }
+
+  &__help {
+    display: block;
+    max-width: 320px;
+  }
+
+  &__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+  }
+
+  &__hint {
+    margin-top: 2px;
+    color: var(--semi-color-text-2);
+
+    code {
+      padding: 0 4px;
+      border-radius: 3px;
+      background: var(--semi-color-fill-0);
+    }
+  }
+
+  &__item--warn strong {
+    color: var(--semi-color-warning);
+  }
+}
+
+// A tile is a container: the content is a button (reset its look), the action row sits below it.
+.card {
+  &:hover {
+    border-color: var(--semi-color-primary);
+  }
+
+  &--selected {
+    border-color: var(--semi-color-primary);
+    box-shadow: 0 0 0 2px var(--semi-color-primary);
+  }
+
+  // Hidden ("not interested") offers: greyed out.
+  &--dismissed {
+    opacity: 0.55;
+    filter: grayscale(1);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 2px 8px 6px;
+    border-top: 1px solid var(--semi-color-border);
+  }
+}
+
+button.card__select {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--semi-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.detail__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.card__media,
+.card__body,
+.card__title,
+.card__facts,
+.card__meta {
+  display: flex;
+}
+
+.card__ratings {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.circles {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &__label {
+    color: var(--semi-color-text-2);
+    font-size: 12px;
+  }
+
+  &__svg {
+    display: block;
+  }
+
+  &__fill {
+    fill: var(--semi-color-primary);
+  }
+
+  &__empty {
+    fill: var(--semi-color-fill-2);
+  }
+
+  &__value {
+    font-size: 13px;
+    color: var(--semi-color-text-1);
+  }
+
+  &--none {
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+}
+
+.breakdown__ai {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+.card__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &--none {
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+
+  &__value {
+    font-weight: 600;
+  }
+}
+
+.detail {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border-radius: var(--semi-border-radius-large);
+  background: var(--semi-color-bg-1);
+  border: 1px solid var(--semi-color-border);
+  padding: 12px;
+
+  &__photo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-fill-0);
+
+    &--empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--semi-color-text-2);
+    }
+  }
+
+  &__title {
+    margin: 12px 0 4px;
+    font-size: 18px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  &__link {
+    color: var(--semi-color-link);
+  }
+
+  &__excluded,
+  .breakdown__excluded {
+    margin: 8px 0;
+    padding: 6px 10px;
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-danger-light-default);
+    color: var(--semi-color-danger);
+    font-weight: 600;
+  }
+
+  &__facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 14px;
+    margin: 12px 0;
+
+    dt {
+      color: var(--semi-color-text-2);
+    }
+
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__heading {
+    margin: 12px 0 0;
+    font-size: 15px;
+  }
+
+  &__subheading {
+    margin: 8px 0 2px;
+    font-size: 13px;
+    color: var(--semi-color-text-1);
+  }
+
+  &__status {
+    margin: 8px 0;
+    padding: 4px 10px;
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-fill-0);
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+
+  &__costs {
+    width: 100%;
+    margin-top: 4px;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 2px 0;
+      text-align: left;
+      font-weight: normal;
+      border-bottom: 1px solid var(--semi-color-border);
+    }
+
+    th {
+      color: var(--semi-color-text-2);
+      padding-right: 14px;
+    }
+
+    td {
+      text-align: right;
+    }
+  }
+
+  &__factlist {
+    margin: 2px 0 0;
+    padding-left: 18px;
+
+    li {
+      margin: 1px 0;
+    }
+  }
+
+  &__excerpt {
+    margin: 4px 0;
+    color: var(--semi-color-text-1);
+  }
+
+  &__description {
+    margin: 4px 0;
+
+    summary {
+      cursor: pointer;
+      color: var(--semi-color-link);
+    }
+  }
+
+  &__text {
+    margin: 4px 0 8px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+}
+
+.breakdown {
+  &__overall {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__rows {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+
+    &--missing {
+      opacity: 0.8;
+    }
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 90px auto 32px;
+    align-items: center;
+    gap: 2px 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--semi-color-border);
+  }
+
+  &__param {
+    font-weight: 600;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__reason {
+    grid-column: 1 / -1;
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+}
+
+// Distribution section: three small charts; colors follow the Semi theme variables.
+.distribution {
+  margin-bottom: 16px;
+  border-radius: var(--semi-border-radius-medium);
+  background: var(--semi-color-bg-1);
+  border: 1px solid var(--semi-color-border);
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    background: none;
+    color: var(--semi-color-text-0);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--semi-color-primary);
+      outline-offset: -2px;
+    }
+  }
+
+  &__chevron {
+    transition: transform 0.15s;
+
+    &--closed {
+      transform: rotate(-90deg);
+    }
+  }
+
+  &__count {
+    font-weight: 400;
+    color: var(--semi-color-text-2);
+  }
+
+  &__error {
+    padding: 0 12px 12px;
+    color: var(--semi-color-danger);
+  }
+
+  // Four small cards in a row on a desktop, two on a tablet, one on a phone.
+  &__charts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    padding: 2px 12px 12px;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 560px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+// One color per chart: coral (the brand) for the score, violet for the AI score, teal for the rent, blue for the
+// distance. Each is at least 3:1 against its card in its theme (lighter tints in dark mode).
+.chart {
+  --chart-color: var(--semi-color-primary);
+  --chart-color-hover: var(--semi-color-primary-hover);
+
+  &--score {
+    --chart-color: #e0522a;
+    --chart-color-hover: #c43f19;
+  }
+
+  &--ai {
+    --chart-color: #7c5ce6;
+    --chart-color-hover: #6544d4;
+  }
+
+  &--rent {
+    --chart-color: #0e8f7e;
+    --chart-color-hover: #0a7567;
+  }
+
+  &--dist {
+    --chart-color: #2f6fed;
+    --chart-color-hover: #1f58cc;
+  }
+
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--semi-border-radius-medium);
+  background: var(--semi-color-bg-0);
+  border: 1px solid var(--semi-color-border);
+
+  &__title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  &__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  &__bar {
+    fill: var(--chart-color);
+    pointer-events: none;
+  }
+
+  &__hit {
+    fill: transparent;
+  }
+
+  &__bin--clickable {
+    cursor: pointer;
+    outline: none;
+
+    &:hover .chart__bar {
+      fill: var(--chart-color-hover);
+    }
+
+    &:focus-visible .chart__hit {
+      stroke: var(--chart-color);
+      stroke-width: 1.5;
+    }
+  }
+
+  &__axis {
+    stroke: var(--semi-color-border);
+    stroke-width: 1;
+  }
+
+  &__tick {
+    fill: var(--semi-color-text-2);
+    font-size: 10px;
+  }
+
+  &__caption,
+  &__empty {
+    color: var(--semi-color-text-2);
+    font-size: 12px;
+  }
+
+  &__empty {
+    padding: 24px 0;
+  }
+}
+
+// ---- Alert tiers: "Fantastic" (brand coral) and "Good" (green), each with a small icon ----
+// Fantastic offers are emailed immediately, Good ones collected in the digest. The icon takes the text color.
+.tier-label,
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.tier-icon {
+  flex: none;
+  color: var(--tier-color);
+
+  &--fantastic {
+    --tier-color: var(--wgg-brand);
+  }
+
+  &--good {
+    --tier-color: var(--semi-color-success);
+  }
+}
+
+.tier-badge {
+  padding: 0 6px;
+  border-radius: var(--semi-border-radius-small);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+
+  &--fantastic {
+    background: rgba(242, 99, 58, 0.14);
+    color: var(--wgg-brand-strong);
+  }
+
+  &--good {
+    background: var(--semi-color-success-light-default);
+    color: var(--semi-color-success);
+  }
+}
+
+body[theme-mode='dark'] .tier-badge--fantastic {
+  background: rgba(242, 99, 58, 0.22);
+  color: #f99274;
+}
+
+// ---- LLM assessment: tile badge and the "AI assessment" block of the side panel ----
+// Only Semi variables are used, so every color follows the light/dark theme.
+.verbindung-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: var(--semi-border-radius-small);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+
+  &--mid {
+    background: var(--semi-color-warning-light-default);
+    color: var(--semi-color-warning);
+  }
+
+  &--high {
+    background: var(--semi-color-danger-light-default);
+    color: var(--semi-color-danger);
+  }
+}
+
+.ai {
+  &__ineligible {
+    margin: 6px 0;
+    color: var(--semi-color-danger);
+    font-weight: 600;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+  }
+
+  &__label {
+    flex: none;
+    width: 76px;
+    color: var(--semi-color-text-2);
+  }
+
+  &__bar {
+    flex: 1;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--semi-color-fill-1);
+    overflow: hidden;
+
+    &--low .ai__bar-fill {
+      background: var(--semi-color-success);
+    }
+
+    &--mid .ai__bar-fill {
+      background: var(--semi-color-warning);
+    }
+
+    &--high .ai__bar-fill {
+      background: var(--semi-color-danger);
+    }
+  }
+
+  &__bar-fill {
+    height: 100%;
+    border-radius: 5px;
+  }
+
+  &__percent {
+    flex: none;
+    min-width: 44px;
+    text-align: right;
+    font-weight: 600;
+
+    &--mid {
+      color: var(--semi-color-warning);
+    }
+
+    &--high {
+      color: var(--semi-color-danger);
+    }
+  }
+
+  &__signals {
+    margin: 0 0 6px 84px;
+    padding-left: 16px;
+    color: var(--semi-color-text-1);
+    font-style: italic;
+    overflow-wrap: anywhere;
+  }
+
+  &__why-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    cursor: pointer;
+    list-style-position: inside;
+
+    .detail__subheading {
+      display: inline;
+      margin: 0;
+    }
+  }
+
+  &__why-total {
+    color: var(--semi-color-danger);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__deductions {
+    margin: 2px 0 8px;
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--semi-color-text-1);
+  }
+
+  &__deduction-points {
+    color: var(--semi-color-danger);
+    font-weight: 700;
+  }
+
+  &__summary {
+    margin: 8px 0;
+    color: var(--semi-color-text-0);
+  }
+
+  &__list--good .detail__subheading,
+  &__list--good .ai__flag {
+    color: var(--semi-color-success);
+  }
+
+  &__list--bad .detail__subheading,
+  &__list--bad .ai__flag {
+    color: var(--semi-color-danger);
+  }
+
+  &__flag {
+    margin-right: 6px;
+    vertical-align: -2px;
+  }
+
+  // The flag replaces the bullet of each entry.
+  &__flaglist {
+    list-style: none;
+    padding-left: 0;
+
+    li {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+  }
+
+  &__flag--item {
+    flex: none;
+    margin-right: 0;
+    font-size: 12px;
+  }
+
+  &__status--failed {
+    color: var(--semi-color-danger);
+  }
+
+  &__model {
+    margin-top: 6px;
+    color: var(--semi-color-text-2);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+}
+
+// Hidden offers ("Show hidden"): who hid them and why.
+.card__hidden {
+  display: block;
+  color: var(--semi-color-text-2);
+  font-size: 12px;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.detail__hidden {
+  max-width: 100%;
+  white-space: normal;
+}
+
+@keyframes card-new-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+
+  &__card {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 24px;
+    border-radius: var(--semi-border-radius-large);
+    background: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+  }
+
+  &__brand {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__hint {
+    margin: 0;
+    text-align: center;
+    color: var(--semi-color-text-2);
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--semi-color-text-1);
+  }
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+
+  &__name {
+    font-weight: 600;
+  }
+}
+
+.app__back {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin-bottom: 12px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 900px;
+
+  &__section {
+    padding: 16px 20px;
+    border-radius: var(--semi-border-radius-medium);
+    background: var(--semi-color-bg-1);
+    border: 1px solid var(--semi-color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  &__intro {
+    color: var(--semi-color-text-1);
+
+    p {
+      margin: 0 0 8px;
+    }
+  }
+
+  &__steps {
+    margin: 0;
+    padding-left: 22px;
+    color: var(--semi-color-text-1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  // A field stands alone in the column-flex section: no flex-basis there (a basis of 220px would be a 220px tall
+  // box with an empty gap under the input). Inside a row the fields share the width.
+  &__field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 440px;
+  }
+
+  &__row > .options__field {
+    flex: 1 1 200px;
+    align-items: stretch;
+  }
+
+  &__row--compact > .options__field {
+    flex: 0 0 160px;
+  }
+
+  &__field > .semi-input-wrapper,
+  &__field > .semi-input-number {
+    width: 100%;
+  }
+
+  &__label {
+    color: var(--semi-color-text-1);
+    font-size: 13px;
+  }
+
+  &__hint {
+    color: var(--semi-color-text-2);
+    font-size: 13px;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+  }
+
+  &__group,
+  &__complex,
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__form {
+    gap: 10px;
+  }
+
+  &__inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--semi-color-text-1);
+  }
+
+  // Sub-settings of a switch: indented under it, dimmed while the switch is off.
+  &__sub {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--semi-color-border);
+
+    &--off {
+      opacity: 0.55;
+    }
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__query {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 10px 12px;
+    border-radius: var(--semi-border-radius-small);
+    border: 1px solid var(--semi-color-border);
+  }
+
+  &__query-main {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__url {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  &__slider {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 520px;
+    padding: 0 8px;
+
+    &--weight {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr) 36px;
+      align-items: center;
+      gap: 12px;
+      max-width: 460px;
+      padding: 0;
+    }
+  }
+
+  &__value {
+    color: var(--semi-color-text-1);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__weights-layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 32px;
+  }
+
+  &__weights {
+    flex: 1 1 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__json {
+    margin: 0;
+    padding: 8px 10px;
+    overflow-x: auto;
+    border-radius: var(--semi-border-radius-small);
+    background: var(--semi-color-fill-0);
+    font-size: 13px;
+  }
+}
+
+.filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+// With a range selected the other bars step back; the selected one keeps the full color and an outline.
+.chart--filtered .chart__bin:not(.chart__bin--active) .chart__bar {
+  opacity: 0.35;
+}
+
+.chart__bin--active .chart__bar {
+  stroke: var(--semi-color-text-0);
+  stroke-width: 1.5;
+}
+
+body[theme-mode='dark'] .chart {
+  &--score {
+    --chart-color: #f2633a;
+    --chart-color-hover: #f67d58;
+  }
+
+  &--ai {
+    --chart-color: #a78bfa;
+    --chart-color-hover: #bda6fb;
+  }
+
+  &--rent {
+    --chart-color: #2dd4bf;
+    --chart-color-hover: #5eead4;
+  }
+
+  &--dist {
+    --chart-color: #60a5fa;
+    --chart-color-hover: #93c5fd;
+  }
+}
+
+.weights-pie {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__svg {
+    width: 110px;
+    height: 110px;
+    flex: none;
+  }
+
+  &__slice {
+    stroke: var(--semi-color-bg-1);
+    stroke-width: 1.5;
+  }
+
+  &__empty {
+    fill: none;
+    stroke: var(--semi-color-border);
+    stroke-width: 2;
+  }
+
+  &__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--semi-color-text-1);
+  }
+
+  &__swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 2px;
+  }
+}
+
+// "3er WG" with the known flatmates as small gender symbols and counts.
+.flat {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 8px;
+
+  &__mate {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    color: var(--semi-color-text-1);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__symbol {
+    font-size: 15px;
+    line-height: 1;
+  }
+}
+
+.app__crash {
+  max-width: 560px;
+  margin: 15vh auto 0;
+  padding: 0 16px;
+  color: var(--semi-color-text-0);
+}

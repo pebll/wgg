@@ -1,0 +1,11 @@
+# Server section of config/wgg.yaml for the container (copy the rest from config/wgg.example.yaml).
+server:
+  host: 0.0.0.0 # inside the container; nothing is published on the host, only Caddy reaches it
+  port: 9998
+  publicPath: /
+  publicUrl: https://wgg.xn--lo-bja.com # links in alert emails
+  # Caddy is the only client and sits on the docker network, so its address is not loopback. Without this the
+  # login rate limit sees every visitor as Caddy and the cookie is not marked Secure (X-Forwarded-Proto ignored).
+  # "uniquelocal" covers docker's private ranges (172.16/12 ...); tighten to the network's CIDR if you like.
+  trustProxy: uniquelocal
+  sessionHours: 168

@@ -1,0 +1,12 @@
+node_modules/
+db/
+.env
+config/wgg.yaml
+npm-debug.log
+.DS_Store
+.idea
+.vscode
+ui/dist/
+config/evaluation.yaml
+config/users.yaml
+odd/

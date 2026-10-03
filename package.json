@@ -1,0 +1,51 @@
+{
+  "name": "wgg",
+  "version": "0.1.0",
+  "description": "WG Gefunden! — private WG-Gesucht monitor with scoring and alerts",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wgg": "bin/wgg.js"
+  },
+  "scripts": {
+    "start": "node bin/wgg.js run",
+    "scrape-once": "node bin/wgg.js scrape-once",
+    "test": "vitest run",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt \"**/*.{js,jsx}\"",
+    "format:check": "oxfmt --check \"**/*.{js,jsx}\"",
+    "build:frontend": "vite build",
+    "start:frontend:dev": "vite"
+  },
+  "author": "Léo Brucker <leo@brucker.fr>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "dependencies": {
+    "@douyinfe/semi-icons": "2.103.0",
+    "@douyinfe/semi-ui-19": "2.103.0",
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/session": "^11.1.3",
+    "@fastify/static": "10.1.5",
+    "better-sqlite3": "^13.0.3",
+    "cheerio": "^1.2.0",
+    "cloakbrowser": "^0.5.11",
+    "fastify": "5.12.5",
+    "nodemailer": "10.0.13",
+    "puppeteer-core": "^25.12.0",
+    "query-string": "9.5.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.1",
+    "less": "4.9.1",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
+    "vite": "8.3.1",
+    "vitest": "^5.0.2"
+  }
+}

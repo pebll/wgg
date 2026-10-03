@@ -1,0 +1,8 @@
+# Add to the Caddyfile of the nextcloud project (caddy container, network "backend"), then reload:
+#   docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+# The IDN wgg.léo.com must be written in punycode.
+wgg.xn--lo-bja.com {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy wgg:9998
+}

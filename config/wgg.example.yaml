@@ -1,0 +1,65 @@
+# Copy to config/wgg.yaml (gitignored) and edit.
+# Secrets (e.g. SMTP credentials) never go here; use .env (see .env.example).
+
+# SQLite database file (default: ./db/wgg.db). A relative path is resolved against the project root (the
+# directory with package.json), not against the directory you start wgg from.
+db: ./db/wgg.db
+
+# WG-Gesucht search result URLs, one per search. Build the search on wg-gesucht.de
+# (city, max rent, ...) and paste the result page URL. Only https://www.wg-gesucht.de is accepted.
+searches:
+  - name: Munich up to 750 EUR
+    url: https://www.wg-gesucht.de/wg-zimmer-in-Muenchen.90.0.1.0.html
+
+schedule:
+  intervalMinutes: 30 # base polling interval
+  jitterPercent: 20 # random +/- jitter applied to each wait
+  maxBackoffMinutes: 60 # cap for exponential backoff after bot detection / errors
+  delayBetweenSearchesSeconds: [5, 15] # random pause between searches within one cycle
+  manualFetchMinGapSeconds: 600 # "Fetch now" button (10 minutes): disabled/refused if the last fetch, scheduled or manual, started less than this many seconds ago
+
+# Detail pages: after each search cycle `wgg run` fetches the page of every new listing in the background (description,
+# costs, WG facts), one page at a time, never in parallel to a search cycle. A bot wall on a detail page stops the
+# queue and triggers the same exponential backoff as the searches. `wgg details` drains the queue once by hand.
+details:
+  delaySeconds: 60 # pause between two detail requests (minimum 10)
+  jitterPercent: 50 # random +/- jitter: 60 s +/- 50 % = 30-90 s
+  maxAgeDays: 7 # listings older than this are skipped (marked "skipped"), as are dismissed ones
+  maxAttempts: 3 # failed fetches are retried after the other listings, then marked "failed"
+
+# Why limits: every DISTINCT enabled search URL of all users is one request to WG-Gesucht per cycle, and WG-Gesucht
+# blocks clients that ask too often. The data model supports several queries per user and many users; these two numbers
+# keep the load flat. Raise them only with care (and a longer schedule.intervalMinutes).
+queries:
+  maxPerUser: 1 # search queries one user may have (>= 1). Two users with the same URL cost one request.
+  maxDistinctPerCycle: 5 # at most this many distinct URLs per cycle; the rest wait their turn (longest waiting first)
+
+# Web UI / API (wgg serve, wgg run). There is NO login: keep the default loopback address, or bind to
+# your home network address at most. Never expose this port to the internet (no port forwarding).
+server:
+  host: 127.0.0.1 # use 0.0.0.0 only inside a trusted LAN or a container behind a published loopback port
+  port: 9998
+
+# Email alerts (only after the AI assessment). SMTP settings (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
+# MAIL_FROM, MAIL_TO, optional SMTP_SECURE) live in .env; without them alerts are only logged ("would send").
+# Only listings with a finished AI assessment, not excluded, not hidden (by you, by the program, or messaged) and
+# not older than maxAgeHours are ever announced; each listing is mailed at most once.
+#
+# Rules: a list; every rule is an object whose conditions must ALL hold (AND); the alert fires when ANY rule matches (OR).
+# Fields: overall (rule-based score 1-10), ai (AI fit score 1-10), rent (EUR), size (m2), distanceKm (to the target),
+#         verbindungProbability (0-1). Operators: gt, gte, lt, lte, eq. A field without a value never matches.
+# An empty list (rules: []) switches that kind of alert off.
+notify:
+  enabled: true
+  dryRun: false # true: only log what would be sent (nothing is marked as sent)
+  maxAgeHours: 24 # ignore listings posted (else first seen) longer ago than this
+  # Fantastic offers (key `priority`): ONE email right after the AI assessment of a listing.
+  priority:
+    rules:
+      - { overall: { gt: 7 }, ai: { gt: 7 } }
+      # Example of an extra rule (OR): a fairly good and cheap room is Fantastic too
+      # - { overall: { gt: 5 }, rent: { lt: 700 } }
+  # Good offers (key `bulk`): ONE digest email once the detail + AI queues are done after a fetch (Fantastic ones are skipped).
+  bulk:
+    rules:
+      - { overall: { gt: 5 }, ai: { gt: 5 } }

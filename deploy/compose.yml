@@ -1,0 +1,42 @@
+# Server folder ~/wgg (compose project "wgg"). Layout next to this file:
+#   db/        SQLite database (chown 1000:1000)
+#   config/    wgg.yaml, evaluation.yaml, users.yaml (readable by uid 1000)
+#   .env       secrets (SESSION_SECRET, LLM_*, SMTP_*), chmod 600
+#   repo/      a copy of the wgg repository (only when building on the server)
+services:
+  wgg:
+    # Built on the server from the copied repo (`docker compose up -d --build`) and tagged wgg:latest ...
+    build: ./repo
+    # ... or prebuilt elsewhere: `docker build -t wgg:latest .` locally, then
+    #   docker save wgg:latest | gzip | ssh lo-server 'gunzip | docker load'
+    # and start with `docker compose up -d --no-build` (the loaded image is used as is).
+    image: wgg:latest
+    container_name: wgg
+    restart: unless-stopped
+    volumes:
+      - ./db:/app/db
+      - ./config:/app/config
+      - ./.env:/app/.env:ro # wgg loads .env from its working directory (/app)
+      - cloakbrowser:/app/.cloakbrowser # downloaded Chromium (~700 MB), survives image updates
+    environment:
+      TZ: Europe/Berlin
+    networks:
+      - backend
+    # No published ports: Caddy reaches the container as wgg:9998 over the shared network.
+    mem_limit: 1536m
+    shm_size: 1gb # Chromium
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  cloakbrowser:
+
+networks:
+  backend:
+    external: true
+    # Name of the network the Caddy container is on. Check with `docker network ls`
+    # (a compose project "nextcloud" with a network "backend" is called nextcloud_backend).
+    name: nextcloud_backend

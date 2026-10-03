@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "node": true,
+    "es2024": true,
+    "vitest": true,
+    "browser": true
+  },
+  "ignorePatterns": ["**/node_modules/**", "db/**", "ui/dist/**", "config/wgg.yaml"],
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "no-undef": "error"
+  }
+}

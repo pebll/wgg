@@ -1,0 +1,85 @@
+# Scoring configuration for wgg. Copy to config/evaluation.yaml (gitignored) and tune it.
+# Every number below is a PLACEHOLDER ("tune me"); nothing is hardcoded in the code.
+# Any key you omit keeps the value shown here. If config/evaluation.yaml does not exist,
+# this example is used and wgg logs a warning.
+#
+# Every parameter is scored 1 (bad) to 10 (great), linearly between `worst` and `best`, clamped.
+# Parameters that cannot be scored (missing data) are left out of the weighted average and listed
+# as "missing" in the breakdown; they are never scored as 0.
+
+# Distance is measured (straight line, km) to this point. Default: TUM Universitaetsbibliothek.
+target:
+  name: TUM Universitätsbibliothek Stammgelände
+  lat: 48.1488833
+  lng: 11.5677668
+
+# Weight of each parameter in the overall score. 0 disables a parameter completely.
+weights:
+  rent: 3
+  distance: 3
+  recency: 2
+  size: 1.5
+  stayLength: 1.5 # temporary (befristet) listings only; open-ended listings score 10
+
+# Monthly rent in EUR: best -> 10, worst -> 1. There is no hard cap: limit the rent in your WG-Gesucht search.
+rent:
+  best: 450
+  worst: 750
+
+# Straight-line distance to the target in km: best -> 10, worst -> 1.
+distanceKm:
+  best: 1.5
+  worst: 10
+
+# Room size in m2: best -> 10, worst -> 1.
+sizeM2:
+  worst: 9
+  best: 20
+
+# Hours since the ad went online: best -> 10, worst -> 1 (more recent offers get more points).
+recencyHours:
+  best: 0
+  worst: 72
+
+# The move-in date is deliberately NOT scored. Temporary listings (an end date is given) are scored by
+# stay length: 10 from minStayDays on, 1 below minimumDays, linear in between.
+stayLength:
+  minStayDays: 90
+  minimumDays: 30
+
+# Listings whose title, card details or (once fetched) full description contain one of these words
+# (case-insensitive, whole word) get overall 1 and the reason. Use specific terms: a plain "Verbindung" would also
+# exclude "gute Verbindung zur U-Bahn". Hard-excluded listings are left out of the statistics.
+exclusions:
+  keywords:
+    - Studentenverbindung
+    - Verbindungshaus
+    - Burschenschaft
+    - Corps
+    - Landsmannschaft
+    - Bundesbrüder
+    - Aktivitas
+
+# LLM assessment of the full detail-page text (see README "LLM assessment"). The gateway URL and the API key are
+# secrets and live in .env (LLM_BASE_URL, LLM_API_KEY; LLM_MODEL overrides `model` below), never here.
+# Listings already hard-excluded by the rules above are not sent to the LLM (saves tokens).
+llm:
+  enabled: true
+  model: "" # model id of the gateway (see `wgg llm-check`); empty = LLM assessment is off. Set it in config/evaluation.yaml
+  weight: 2 # the LLM fit score (1-10) is one more weighted parameter, "llm"; 0 = shown but not scored
+  excludeThreshold: 0.6 # Verbindung probability at or above this excludes the listing (overall 1)
+  badgeThreshold: 0.3 # the UI shows a "Verbindung?" warning badge from this probability on
+  maxDescriptionChars: 12000 # longer descriptions are cut (and marked as truncated in the prompt)
+  delaySeconds: 2 # pause between two LLM calls
+  hideIneligible: true # the AI says the ad explicitly excludes you (e.g. only women): exclude + hide it ("LLM: not eligible: ...")
+  # About you, sent to the AI so it can judge fit and eligibility. Gender, age, status, languages, the kind of WG you want.
+  profile: |
+    A student looking for a normal, friendly shared flat in Munich. Edit this text in config/evaluation.yaml:
+    your gender, age, languages and what kind of WG you want.
+
+# Hiding. A listing with an exclusion (keyword, rent above the hard maximum, LLM Verbindung) is hidden automatically
+# with that reason, exactly like the "Not interested" button hides it for you ("Show hidden" lists both kinds).
+# If you restore such a listing it is never hidden automatically again. Optionally also hide listings whose overall
+# score is below a limit (1-10; null = off).
+autoHide:
+  belowOverall: null
