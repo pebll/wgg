@@ -151,7 +151,7 @@ describe('#evaluation for several users', () => {
 
   it("geocodes a listing once for everybody and computes each user's distance to their own target", async () => {
     storeNewListings([listing(1)], SEARCH, NOW);
-    const near = context(U); // default target: TUM library
+    const near = context(U, { target: { name: 'TUM', lat: 48.1488833, lng: 11.5677668 } });
     const far = context(V, { target: { name: 'Garching', lat: 48.2649, lng: 11.6711 } });
     const deps = makeDeps({ 'Straße1 1, Maxvorstadt, München': MUNICH }, { contexts: [near, far] });
     const stats = await evaluateStoredListings({ ...deps, all: true });

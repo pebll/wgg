@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { bootstrapUsers } from '../../lib/users/bootstrap.js';
-import { defaultEvaluationConfig } from '../../lib/evaluation/config.js';
+import { defaultEvaluationConfig, DEFAULT_PROFILE_TEXT } from '../../lib/evaluation/config.js';
 import { parseConfig } from '../../lib/config.js';
 import { listUserQueries } from '../../lib/services/queries/queriesStorage.js';
-import { getStoredSettings } from '../../lib/services/settings/userSettingsStorage.js';
+import { getStoredSettings, saveSettings } from '../../lib/services/settings/userSettingsStorage.js';
 import { queryListings, getUserListing } from '../../lib/services/listings/listingsStorage.js';
 import { llmSettingsHash } from '../../lib/llm/settingsHash.js';
 import { runMigrations } from '../../lib/services/storage/migrations/migrate.js';
@@ -179,7 +179,9 @@ describe('#bootstrapUsers: users and defaults', () => {
     expect(listUserQueries(ALICE)[0].id).not.toBe(listUserQueries(BOB)[0].id); // a copy, not shared rows
     expect(getStoredSettings(ALICE).notify.email).toBe('a@example.org');
     expect(getStoredSettings(BOB).notify.email).toBe('b@example.org');
-    expect(getStoredSettings(BOB).llm.profile).toBe('Leo: long-term room.');
+    expect(getStoredSettings(ALICE).llm.profile).toBe('Leo: long-term room.'); // the owner keeps llm.profile
+    expect(getStoredSettings(BOB).llm.profile).toBe(DEFAULT_PROFILE_TEXT); // everybody else: the generic text
+    expect(getStoredSettings(BOB).scoring.target).toMatchObject({ name: 'KIT-Bibliothek Süd', lat: 49.0127803 });
     expect(getStoredSettings(BOB).scoring.rent).toEqual({ best: 450, worst: 750 });
   });
 
@@ -233,5 +235,74 @@ describe('#bootstrapUsers: users and defaults', () => {
   it('refuses to run without an admin (users.yaml validation prevents that, this is the backstop)', async () => {
     await openDb();
     expect(() => run([user(ALICE)])).toThrow(/admin/);
+  });
+});
+
+describe('#bootstrapUsers: new defaults reach existing users once', () => {
+  const TUM = { name: 'TUM Universitätsbibliothek Stammgelände', address: 'TUM', lat: 48.1488833, lng: 11.5677668 };
+  const OWN = { name: 'Home', address: 'Somewhere 1', lat: 48.2, lng: 11.6 };
+  /** Settings as a user got them before the generic profile and the KIT target existed. */
+  const oldSettings = (over = {}) => ({
+    scoring: { target: TUM },
+    llm: { profile: 'Leo: long-term room.' },
+    ...over,
+  });
+  const users = () => [user(ALICE, { admin: true }), user(BOB), user('carol'), user('dave', { admin: true })];
+
+  async function seeded() {
+    await openDb();
+    run([user(ALICE, { admin: true })]);
+    saveSettings(BOB, oldSettings(), NOW);
+    saveSettings('carol', oldSettings({ llm: { profile: 'Carol: loves cats.' }, scoring: { target: OWN } }), NOW);
+    saveSettings('dave', oldSettings(), NOW);
+    Db.execute("DELETE FROM app_meta WHERE key LIKE 'migrated_%'"); // the seeding run above already was a start
+  }
+
+  it('non-admin users who never edited the copied admin profile get the generic text', async () => {
+    await seeded();
+    const summary = run(users());
+    expect(getStoredSettings(BOB).llm.profile).toBe(DEFAULT_PROFILE_TEXT);
+    expect(getStoredSettings('carol').llm.profile).toBe('Carol: loves cats.'); // edited: untouched
+    expect(getStoredSettings('dave').llm.profile).toBe('Leo: long-term room.'); // another admin: untouched
+    expect(getStoredSettings(ALICE).llm.profile).toBe('Leo: long-term room.');
+    expect(summary.reprofiled).toEqual([BOB]);
+  });
+
+  it('non-admin users still on the old TUM default target get KIT; own targets stay', async () => {
+    await seeded();
+    const summary = run(users());
+    expect(getStoredSettings(BOB).scoring.target).toEqual({
+      name: 'KIT-Bibliothek Süd',
+      address: 'Straße am Forum 1, 76131 Karlsruhe',
+      lat: 49.0127803,
+      lng: 8.4156386,
+    });
+    expect(getStoredSettings('carol').scoring.target).toEqual(OWN);
+    expect(getStoredSettings('dave').scoring.target).toEqual(TUM); // another admin: untouched
+    expect(summary.retargeted).toEqual([BOB]);
+  });
+
+  it('a changed name or position is not the old default', async () => {
+    await seeded();
+    saveSettings(BOB, oldSettings({ scoring: { target: { ...TUM, lat: 48.15 } } }), NOW);
+    expect(run(users()).retargeted).toEqual([]);
+  });
+
+  it('runs once: a user who picks the old values again later is left alone', async () => {
+    await seeded();
+    run(users());
+    saveSettings(BOB, oldSettings(), NOW);
+    const summary = run(users());
+    expect(summary).toMatchObject({ reprofiled: [], retargeted: [] });
+    expect(getStoredSettings(BOB).llm.profile).toBe('Leo: long-term room.');
+    expect(getStoredSettings(BOB).scoring.target).toEqual(TUM);
+  });
+
+  it('re-queues the AI of the changed users through the settings hash', async () => {
+    await seeded();
+    const before = llmSettingsHash({ model: 'm', profile: 'Leo: long-term room.', targetName: TUM.name });
+    run(users());
+    const s = getStoredSettings(BOB);
+    expect(llmSettingsHash({ model: 'm', profile: s.llm.profile, targetName: s.scoring.target.name })).not.toBe(before);
   });
 });

@@ -77,7 +77,7 @@ describe('#api settings', () => {
     expect(res.statusCode).toBe(200);
     const { settings, defaults } = res.json();
     expect(settings.scoring.rent).toEqual({ best: 450, worst: 750 });
-    expect(settings.scoring.target).toMatchObject({ lat: 48.1488833, lng: 11.5677668 });
+    expect(settings.scoring.target).toMatchObject({ lat: 49.0127803, lng: 8.4156386 });
     expect(settings.llm.hideIneligible).toBe(true);
     expect(settings.notify).toMatchObject({ email: 'alice@example.org', enabled: true, maxAgeHours: 24 });
     expect(settings.notify.priority.rules).toEqual([{ overall: { gt: 7 }, ai: { gt: 7 } }]);
@@ -191,11 +191,11 @@ describe('#api settings', () => {
 
     it('does not geocode when the address is unchanged, and ignores coordinates sent by the client', async () => {
       const res = await put(alice, {
-        scoring: { target: { lat: 1, lng: 2, address: 'TUM Universitätsbibliothek Stammgelände' } },
+        scoring: { target: { lat: 1, lng: 2, address: 'Straße am Forum 1, 76131 Karlsruhe' } },
       });
       expect(res.statusCode).toBe(200);
       expect(geocoded).toEqual([]);
-      expect(res.json().settings.scoring.target).toMatchObject({ lat: 48.1488833, lng: 11.5677668 });
+      expect(res.json().settings.scoring.target).toMatchObject({ lat: 49.0127803, lng: 8.4156386 });
     });
 
     it('answers 422 for an address nobody can find, and saves nothing', async () => {

@@ -99,7 +99,7 @@ function SettingsMock() {
         <TextArea
           readonly
           rows={3}
-          value="Two of us, starting a master's. Budget up to 700 €, staying 1-2 years. No fraternities, no party flats."
+          value="Looking for a room in an active, social WG with real shared life, not a Zweck-WG. Open-minded and international flatmates are welcome."
           aria-label="Example AI profile"
         />
       </label>

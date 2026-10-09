@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultEvaluationConfig, parseEvaluationConfig } from '../../lib/evaluation/config.js';
+import { defaultEvaluationConfig, parseEvaluationConfig, DEFAULT_PROFILE_TEXT } from '../../lib/evaluation/config.js';
 import { defaultUserSettings, mergeSettings, buildEvaluationConfig } from '../../lib/settings/defaults.js';
 import { llmSettingsHash } from '../../lib/llm/settingsHash.js';
 import { PROMPT_VERSION } from '../../lib/llm/prompt.js';
@@ -12,20 +12,20 @@ const evaluation = () => ({
 const notify = () => parseConfig({ searches: [{ url: 'https://www.wg-gesucht.de/x.html' }] }).notify;
 
 describe('#user settings defaults', () => {
-  it("derive from the global evaluation config and notify defaults (the admin's profile text is the default profile)", () => {
+  it('derive from the global evaluation config and notify defaults (new users get the generic default profile)', () => {
     const s = defaultUserSettings({ evaluation: evaluation(), notify: notify(), email: 'leo@example.org' });
     expect(s.scoring.target).toEqual({
-      name: 'TUM Universitätsbibliothek Stammgelände',
-      address: 'TUM Universitätsbibliothek Stammgelände',
-      lat: 48.1488833,
-      lng: 11.5677668,
+      name: 'KIT-Bibliothek Süd',
+      address: 'Straße am Forum 1, 76131 Karlsruhe',
+      lat: 49.0127803,
+      lng: 8.4156386,
     });
     expect(s.scoring.rent).toEqual({ best: 450, worst: 750 });
     expect(s.scoring).not.toHaveProperty('wgSize');
     expect(s.scoring.weights).not.toHaveProperty('wgSize');
     expect(s.scoring.weights.rent).toBe(3);
     expect(s.scoring.keywords).toContain('Studentenverbindung');
-    expect(s.llm).toEqual({ profile: 'Leo: 24, male, looking for a long-term room.', hideIneligible: true });
+    expect(s.llm).toEqual({ profile: DEFAULT_PROFILE_TEXT, hideIneligible: true });
     expect(s.notify).toEqual({
       email: 'leo@example.org',
       enabled: true,
@@ -38,6 +38,13 @@ describe('#user settings defaults', () => {
       },
       maxAgeHours: 24,
     });
+  });
+
+  it("the owner starts with llm.profile (the admin's own text), everybody else with llm.defaultProfile", () => {
+    const owner = defaultUserSettings({ evaluation: evaluation(), notify: notify(), isOwner: true });
+    expect(owner.llm.profile).toBe('Leo: 24, male, looking for a long-term room.');
+    const custom = { ...evaluation(), llm: { ...evaluation().llm, defaultProfile: 'For newcomers.' } };
+    expect(defaultUserSettings({ evaluation: custom, notify: notify() }).llm.profile).toBe('For newcomers.');
   });
 
   it("are independent copies (editing one user's settings never changes another's defaults)", () => {
@@ -60,7 +67,7 @@ describe('#user settings defaults', () => {
     expect(merged.scoring.keywords).toEqual(['Corps']);
     expect(merged.notify.bulk.rules).toEqual([]);
     expect(merged.notify.priority.rules).toHaveLength(1);
-    expect(merged.llm.profile).toContain('long-term');
+    expect(merged.llm.profile).toContain('Zweck-WG');
     expect(mergeSettings(defaults, null)).toEqual(defaults);
     expect(mergeSettings(defaults, 'junk')).toEqual(defaults);
   });

@@ -7,6 +7,7 @@ import {
   parseEvaluationConfig,
   defaultEvaluationConfig,
   EvaluationConfigError,
+  DEFAULT_PROFILE_TEXT,
 } from '../../lib/evaluation/config.js';
 
 let dir;
@@ -20,7 +21,12 @@ describe('#evaluation config', () => {
   it('the committed example parses and equals the code defaults', () => {
     const cfg = loadEvaluationConfig('config/does-not-exist.yaml', { warn: () => {} });
     expect(cfg).toEqual(defaultEvaluationConfig());
-    expect(cfg.target.lat).toBeCloseTo(48.1488833);
+    expect(cfg.target).toEqual({
+      name: 'KIT-Bibliothek Süd',
+      address: 'Straße am Forum 1, 76131 Karlsruhe',
+      lat: 49.0127803,
+      lng: 8.4156386,
+    });
     expect(cfg.weights).toEqual({ rent: 3, distance: 3, recency: 2, size: 1.5, stayLength: 1.5 });
     expect(cfg.rent).toEqual({ best: 450, worst: 750 });
     expect(cfg).not.toHaveProperty('wgSize');
@@ -79,6 +85,7 @@ describe('#evaluation config', () => {
       delaySeconds: 2,
       hideIneligible: true,
       profile: expect.stringMatching(/\S/),
+      defaultProfile: expect.stringMatching(/\S/),
     });
     expect(parseEvaluationConfig({ llm: { model: 'x', weight: 3 } }).llm).toMatchObject({ model: 'x', weight: 3 });
     const bad = (raw, re) => expect(() => parseEvaluationConfig(raw)).toThrow(re);
@@ -91,7 +98,22 @@ describe('#evaluation config', () => {
     bad({ llm: { maxDescriptionChars: 100 } }, /llm\.maxDescriptionChars/);
     bad({ llm: { delaySeconds: -1 } }, /llm\.delaySeconds/);
     bad({ llm: { profile: 5 } }, /llm\.profile/);
+    bad({ llm: { defaultProfile: 5 } }, /llm\.defaultProfile/);
     bad({ llm: { hideIneligible: 'yes' } }, /llm\.hideIneligible/);
+  });
+
+  it('the built-in profile for new users is generic: no age, gender, city or language, but no Zweck-WG', () => {
+    expect(DEFAULT_PROFILE_TEXT).toMatch(/Zweck-WG/);
+    expect(DEFAULT_PROFILE_TEXT).not.toMatch(/\d|Munich|München|Karlsruhe|male|female|student|German|English/i);
+    expect(defaultEvaluationConfig().llm.defaultProfile).toBe(DEFAULT_PROFILE_TEXT);
+  });
+
+  it("llm.defaultProfile (new users) and llm.profile (the owner's) are set independently", () => {
+    const cfg = parseEvaluationConfig({ llm: { profile: 'Owner text.' } });
+    expect(cfg.llm.profile).toBe('Owner text.');
+    expect(cfg.llm.defaultProfile).toBe(DEFAULT_PROFILE_TEXT);
+    const both = parseEvaluationConfig({ llm: { profile: 'Owner text.', defaultProfile: 'For newcomers.' } });
+    expect(both.llm).toMatchObject({ profile: 'Owner text.', defaultProfile: 'For newcomers.' });
   });
 
   it('autoHide defaults to off and validates belowOverall', () => {

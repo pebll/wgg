@@ -7,11 +7,13 @@
 # Parameters that cannot be scored (missing data) are left out of the weighted average and listed
 # as "missing" in the breakdown; they are never scored as 0.
 
-# Distance is measured (straight line, km) to this point. Default: TUM Universitaetsbibliothek.
+# Distance is measured (straight line, km) to this point. Default: the KIT library (Karlsruhe). `address` is what
+# new users see in their settings. Coordinates: OpenStreetMap / Nominatim lookup of that address (way 167867872).
 target:
-  name: TUM Universitätsbibliothek Stammgelände
-  lat: 48.1488833
-  lng: 11.5677668
+  name: KIT-Bibliothek Süd
+  address: Straße am Forum 1, 76131 Karlsruhe
+  lat: 49.0127803
+  lng: 8.4156386
 
 # Weight of each parameter in the overall score. 0 disables a parameter completely.
 weights:
@@ -72,10 +74,14 @@ llm:
   maxDescriptionChars: 12000 # longer descriptions are cut (and marked as truncated in the prompt)
   delaySeconds: 2 # pause between two LLM calls
   hideIneligible: true # the AI says the ad explicitly excludes you (e.g. only women): exclude + hide it ("LLM: not eligible: ...")
-  # About you, sent to the AI so it can judge fit and eligibility. Gender, age, status, languages, the kind of WG you want.
+  # About you (the owner), sent to the AI so it can judge fit and eligibility: gender, age, status, languages, the kind
+  # of WG you want. Only the first admin starts with this text; other users never see it.
   profile: |
-    A student looking for a normal, friendly shared flat in Munich. Edit this text in config/evaluation.yaml:
-    your gender, age, languages and what kind of WG you want.
+    Looking for a room in an active, social WG with real shared life, not a Zweck-WG. Open-minded and international flatmates are welcome.
+  # The profile every NEW user starts with (they can edit it in their settings). Keep it generic: no age, gender, city
+  # or language. Users who never edited the copy of the owner's text they got earlier are switched to this once.
+  defaultProfile: |
+    Looking for a room in an active, social WG with real shared life, not a Zweck-WG. Open-minded and international flatmates are welcome.
 
 # Hiding. A listing with an exclusion (keyword, rent above the hard maximum, LLM Verbindung) is hidden automatically
 # with that reason, exactly like the "Not interested" button hides it for you ("Show hidden" lists both kinds).

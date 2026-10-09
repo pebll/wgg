@@ -77,6 +77,28 @@ describe('#cli with several users', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  it('a user still on the old TUM default target is moved to KIT at startup and their distances are recomputed', async () => {
+    const { dir, cfgFile, dbFile } = await project(['alice', 'bob']);
+    await run(['scrape-once', '--config', cfgFile], { withFetcher: async (fn) => fn(async () => html) });
+    Db.init(dbFile);
+    const tum = { name: 'TUM Universitätsbibliothek Stammgelände', address: 'TUM', lat: 48.1488833, lng: 11.5677668 };
+    Db.execute("UPDATE user_settings SET json = json_set(json, '$.scoring.target', json(@tum)) WHERE user_id = 'bob'", {
+      tum: JSON.stringify(tum),
+    });
+    Db.execute("DELETE FROM app_meta WHERE key LIKE 'migrated_%'");
+    Db.execute("UPDATE listings SET lat = 49.0130, lng = 8.4170, geo_precision = 'address'");
+    Db.execute("UPDATE user_listings SET distance_km = 999 WHERE user_id = 'bob'");
+    Db.reset();
+    const r = await run(['evaluate', '--config', cfgFile]);
+    expect(r.code).toBe(0);
+    const target = JSON.parse(query(dbFile, "SELECT json FROM user_settings WHERE user_id = 'bob'")[0].json).scoring
+      .target;
+    expect(target).toMatchObject({ name: 'KIT-Bibliothek Süd', lat: 49.0127803 });
+    const d = query(dbFile, "SELECT MAX(distance_km) AS d FROM user_listings WHERE user_id = 'bob'")[0].d;
+    expect(d).toBeLessThan(1);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   it('upgrading a single-user database: backs it up first, the admin owns all previous state, nothing is lost', async () => {
     const { dir, cfgFile, dbFile } = await project(['alice', 'bob']);
     await openDbUpTo(13, dbFile);

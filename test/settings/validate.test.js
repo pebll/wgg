@@ -70,7 +70,7 @@ describe('#validateSettingsUpdate', () => {
 
     it('latitude and longitude of the target stay what the geocoder found (they cannot be set directly)', () => {
       const next = update({ scoring: { target: { lat: 1, lng: 2, name: 'Home' } } });
-      expect(next.scoring.target).toMatchObject({ name: 'Home', lat: 48.1488833, lng: 11.5677668 });
+      expect(next.scoring.target).toMatchObject({ name: 'Home', lat: 49.0127803, lng: 8.4156386 });
     });
   });
 
