@@ -132,7 +132,17 @@ started less than `schedule.manualFetchMinGapSeconds` ago (default 600 = 10 minu
 from the start of the last fetch, scheduled or manual, and keeps wgg polite towards WG-Gesucht). Without a live scheduler, a
 bot-detected last run also blocks for the first backoff interval (2 x `intervalMinutes`). A cycle that fails before it
 starts (for example the browser does not launch) is recorded as a failed run, so it shows in the header and counts for the
-gap. When the scheduler is not running the header says "Automatic fetching is off - start `wgg run`".
+gap. **Night pause:** WG-Gesucht is only contacted inside the *fetch window*, the union of all users' Good send windows
+(`notify.bulk.window`: earliest `from` to latest `to`; users with Good alerts off still count; 07:00-23:00 without
+users; server local time). Outside it the scheduler sleeps until the window opens (the first cycle starts at the opening
+plus the usual jitter), the detail queue does not start (a running one stops before its next request and resumes with the
+first cycle of the next window), and a manual fetch is refused with **429** "Fetching pauses at night (until 07:00)."
+(`manualFetch.nightPause` is true and `availableAt` is the opening; the header reads "Next fetch: 07:00 (night pause)").
+The AI queue keeps running at night, it never touches WG-Gesucht. When the scheduler is not running the header says "Automatic fetching is off - start `wgg run`".
+
+**Defaults for new users.** The scoring target is the KIT library (`target` in `config/evaluation.yaml`; users still on
+the old built-in TUM target were moved to it once, their distances are evaluated again) and the AI profile is generic.
+Users who set their own target or profile are never touched.
 
 **Database path.** A relative `db` path in the config (default `./db/wgg.db`) is resolved against the project root, the
 directory that holds `package.json`, not against the directory you start `wgg` from; absolute paths and `:memory:` are
@@ -227,7 +237,9 @@ its own **Save** and **Reset to default** (reset fills the fields with the defau
   shows why it cannot (no address, server without SMTP, too many tests).
 - **AI profile.** The text the local LLM reads each offer against (who moves in, budget, how long you stay, deal-breakers),
   and the switch that hides offers the AI finds not eligible (they stay listed under "Show removed automatically"). New
-  users start with the admin's profile from `config/evaluation.yaml` as an example: replace it with your own. Saving
+  users start with a generic text (no age, gender, city or language: an active, social WG, not a Zweck-WG) from
+  `llm.defaultProfile` of `config/evaluation.yaml`; replace it with your own. The admin's own text is `llm.profile` and is
+  only used for the owner (the first admin). Saving
   re-assesses your listings automatically (assessments store a hash of prompt version, profile and model).
 - **Auto-reject.** Two switches that hide offers automatically (they stay listed under "Show removed automatically" with
   the reason, and **Restore** keeps one visible). **Reject Verbindungen automatically** (on by default) has two parts:
@@ -401,7 +413,8 @@ geocodes every row again and retries places Nominatim did not know before).
 Each parameter is scored 1 (bad) to 10 (great), linearly between a `worst` and a `best` value. The overall score is
 the weighted average, rounded to one decimal. Parameters that cannot be read (no price, no location, ...) are left
 out of the average and listed under `missing`; they are never scored as 0. Parameters: `rent`, `distance`
-(straight-line km to the target, default the TUM Universitätsbibliothek), `recency` (hours since the ad went online:
+(straight-line km to the target, default the KIT library "KIT-Bibliothek Süd", Straße am Forum 1, 76131 Karlsruhe;
+coordinates from an OpenStreetMap/Nominatim lookup of that address; set your own in Options), `recency` (hours since the ad went online:
 0 h = 10, 72 h = 1), `size`, `stayLength` (temporary listings; open-ended = 10; the move-in date itself is not
 scored). The WG size ("3er WG") is shown on the offer but not scored. There is no rent cap: limit the rent in the WG-Gesucht
 search itself. Hard exclusions (the keyword list such as Studentenverbindung/Burschenschaft/Corps) set the overall
@@ -459,7 +472,9 @@ gateway accepts it, code fences tolerated, one retry on invalid JSON, 60 s timeo
 - **Config** (`llm:` in `config/evaluation.yaml`): `enabled`, `model`, `weight` (default 2), `excludeThreshold` (0.6),
   `badgeThreshold` (0.3, the UI shows "Verbindung? 45 %" from there), `maxDescriptionChars` (12000; a longer text is
   cut, the prompt and the stored result say so: `truncated`), `delaySeconds` (2 s between two calls).
-- **About you**: `llm.profile` (multi-line text: gender, age, status, languages, the WG you want) and today's date go
+- **About you**: `llm.profile` (the owner's multi-line text: gender, age, status, languages, the WG you want; new users
+  start from the generic `llm.defaultProfile` instead, and once, at the first start of this version, non-admin users who
+  never edited the copy of the owner's text are switched to it) and today's date go
   into the prompt, so the AI judges fit (WG atmosphere, Zweck-WG low) and eligibility. The AI also answers `eligible` /
   `eligibilityReason`; with `llm.hideIneligible` (default true) an ad that explicitly excludes you (only women, age
   range, language ...) is excluded and hidden with `LLM: not eligible: <reason>`.
@@ -474,10 +489,17 @@ gateway accepts it, code fences tolerated, one retry on invalid JSON, 60 s timeo
   stored and shown.
 - **Skipped (no tokens spent)**: listings the rules already exclude (keyword, rent above the hard maximum) and listings
   without a description (`no description`; details failed or skipped).
+- **Backlog ("AI: 159 pending (~21 min)")**: the header number is your own queue: offers in your searches with fetched
+  details that are not hidden, not excluded by your rules and not yet assessed with your current profile. A new user's
+  searches cover everything the others' detail fetches already stored, so the backlog starts large; the local model needs
+  about 8 s per assessment, one at a time, users in turns. Only offers published within `details.maxAgeDays` (default 7
+  days) are assessed, older ones are skipped ("too old"); the queue goes by rule score, best first. The estimate in brackets
+  uses the measured time per assessment (`llm.avgSeconds`, default 8 s) and the backlog of the other users
+  (`llm.etaSeconds`).
 - **Queue**: `wgg run` assesses the queue after the detail queue (serially, never touching WG-Gesucht, no fetch
   lock). `wgg llm [--limit N] [--ids 1,2] [--force]` runs it once (`--force` assesses finished listings again);
   `wgg details --ids 1,2` fetches the named listings (re-queues skipped or failed ones, ignores age and dismissal).
-  `--ids` takes provider ids or row ids. `/api/status` reports `llm: {pending, done, failed, badgeThreshold}`.
+  `--ids` takes provider ids or row ids. `/api/status` reports `llm: {pending, done, failed, avgSeconds, etaSeconds, badgeThreshold}`.
 
 ## Email alerts
 
