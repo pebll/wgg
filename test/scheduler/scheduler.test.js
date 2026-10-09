@@ -209,4 +209,69 @@ describe('#runScheduler external backoff penalty (bot wall on a detail page)', (
     });
     expect(waits).toEqual([]); // aborted right after the cycle
   });
+
+  describe('night pause (fetch window)', () => {
+    const at = (h, m = 0, day = 2) => new Date(2026, 9, day, h, m).getTime();
+    const jittered = { schedule: { ...config.schedule, jitterPercent: 20 } };
+
+    async function driveAt(
+      start,
+      { cycles = 1, sleepsBeforeStop = Infinity, fetchWindow = () => ({ from: 7, to: 23 }) } = {},
+    ) {
+      const controller = new AbortController();
+      let clock = start;
+      const sleeps = [];
+      const plans = [];
+      const ran = [];
+      await runScheduler({
+        config: jittered,
+        signal: controller.signal,
+        random: () => 0.5,
+        now: () => clock,
+        fetchWindow,
+        onSchedule: (p) => plans.push(p),
+        runCycle: async () => {
+          ran.push(clock);
+          if (ran.length >= cycles) controller.abort();
+          return ok;
+        },
+        sleep: async (ms) => {
+          sleeps.push(ms);
+          clock += ms;
+          if (sleeps.length >= sleepsBeforeStop) controller.abort();
+        },
+      });
+      return { sleeps, plans, ran };
+    }
+
+    it('does not fetch at night: sleeps until the window opens, then the first cycle runs with the usual jitter', async () => {
+      const { sleeps, plans, ran } = await driveAt(at(3));
+      const jitter = 0.5 * 0.2 * 5 * 60_000;
+      expect(sleeps[0]).toBe(4 * 3_600_000 + jitter);
+      expect(plans[0]).toEqual({ nextFetchAt: at(7) + jitter, backoff: false, nightPause: true });
+      expect(ran).toEqual([at(7) + jitter]);
+    });
+
+    it('plans the cycle after the last one of the evening for the next morning', async () => {
+      const { sleeps, plans } = await driveAt(at(22, 58), { cycles: 9, sleepsBeforeStop: 1 });
+      const jitter = 0.5 * 0.2 * 5 * 60_000;
+      expect(sleeps[0]).toBe(at(7, 0, 3) + jitter - at(22, 58));
+      expect(plans[0]).toMatchObject({ nextFetchAt: at(7, 0, 3) + jitter, nightPause: true });
+    });
+
+    it('keeps the normal interval inside the window', async () => {
+      const { sleeps, plans } = await driveAt(at(12), { cycles: 9, sleepsBeforeStop: 1 });
+      expect(sleeps[0]).toBe(5 * 60_000);
+      expect(plans[0].nightPause).toBeUndefined();
+    });
+
+    it('reads the window anew for every plan (settings changes apply)', async () => {
+      let window = { from: 7, to: 23 };
+      const { ran } = await driveAt(at(3), { fetchWindow: () => window });
+      expect(ran[0]).toBeGreaterThanOrEqual(at(7));
+      window = { from: 0, to: 24 };
+      const open = await driveAt(at(3), { fetchWindow: () => window });
+      expect(open.ran).toEqual([at(3)]);
+    });
+  });
 });

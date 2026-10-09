@@ -68,6 +68,17 @@ describe('#fetch status formatting', () => {
       'backing off: in 20 min (12:20)',
     );
   });
+
+  it('describeNextFetch names the night pause with the time the window opens', () => {
+    const now = at(23, 30);
+    const status = {
+      schedulerRunning: true,
+      nextFetchAt: at(7, 3) + 24 * 3_600_000,
+      backoff: false,
+      manualFetch: { nightPause: true, availableAt: at(7, 0) + 24 * 3_600_000 },
+    };
+    expect(describeNextFetch(status, now)).toBe('07:00 (night pause)');
+  });
 });
 
 describe('#selectedListing', () => {

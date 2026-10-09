@@ -262,7 +262,12 @@ describe('#fetchCoordinator.manualFetchState (what the Fetch now button shows)',
   const make = (clock = T) => createFetchCoordinator({ config, runCycle: idle.runCycle, now: () => clock });
 
   it('is available now when nothing was fetched yet', () => {
-    expect(make().manualFetchState()).toEqual({ minGapSeconds: 120, availableAt: null, running: false });
+    expect(make().manualFetchState()).toEqual({
+      minGapSeconds: 120,
+      availableAt: null,
+      running: false,
+      nightPause: false,
+    });
   });
 
   it('counts the gap from the last fetch start, scheduled or manual (the coordinator cannot tell them apart)', () => {
@@ -272,6 +277,7 @@ describe('#fetchCoordinator.manualFetchState (what the Fetch now button shows)',
       minGapSeconds: 120,
       availableAt: T - 30_000 + 120_000,
       running: false,
+      nightPause: false,
     });
     expect(make(T + 90_001).manualFetchState().availableAt).toBeNull();
   });
@@ -292,7 +298,12 @@ describe('#fetchCoordinator.manualFetchState (what the Fetch now button shows)',
     expect(c.manualFetchState()).toMatchObject({ running: true });
     finish();
     await done;
-    expect(c.manualFetchState()).toEqual({ minGapSeconds: 120, availableAt: T + 120_000, running: false });
+    expect(c.manualFetchState()).toEqual({
+      minGapSeconds: 120,
+      availableAt: T + 120_000,
+      running: false,
+      nightPause: false,
+    });
   });
 
   it('reports running while a cycle runs, also one of another process', () => {
@@ -313,5 +324,52 @@ describe('#fetchCoordinator.manualFetchState (what the Fetch now button shows)',
     finishFetchRun(id, { newCount: 0, errorCount: 0, botDetected: false, error: null }, T - 500);
     const c = createFetchCoordinator({ config: zero, runCycle: vi.fn(), now: () => T });
     expect(c.manualFetchState().availableAt).toBeNull();
+  });
+});
+
+describe('#fetchCoordinator night pause (fetch window)', () => {
+  const at = (h, m = 0) => new Date(2026, 9, 2, h, m).getTime();
+  const window = { from: 7, to: 23 };
+  const make = (clock, extra = {}) => {
+    const runCycle = vi.fn(async () => okResult);
+    const c = createFetchCoordinator({ config, runCycle, now: () => clock, fetchWindow: () => window, ...extra });
+    return { c, runCycle };
+  };
+
+  it('refuses a manual fetch at night with a clear 429 until the window opens', () => {
+    const { c, runCycle } = make(at(3));
+    expect(c.triggerNow()).toEqual({
+      ok: false,
+      status: 429,
+      error: 'Fetching pauses at night (until 07:00).',
+      retryAfterSeconds: 4 * 3600,
+    });
+    expect(runCycle).not.toHaveBeenCalled();
+  });
+
+  it('accepts a manual fetch inside the window', () => {
+    const { c } = make(at(12));
+    expect(c.triggerNow()).toEqual({ ok: true, mode: 'one-off' });
+  });
+
+  it('reflects the pause in manualFetchState: available at the window start', () => {
+    const { c } = make(at(23, 30));
+    expect(c.manualFetchState()).toMatchObject({ availableAt: new Date(2026, 9, 3, 7).getTime(), nightPause: true });
+  });
+
+  it('manualFetchState has no night pause inside the window', () => {
+    const { c } = make(at(12));
+    expect(c.manualFetchState()).toMatchObject({ availableAt: null, nightPause: false });
+  });
+
+  it('exposes the remaining pause for the detail worker', () => {
+    expect(make(at(5)).c.pauseRemainingMs()).toBe(2 * 3_600_000);
+    expect(make(at(9)).c.pauseRemainingMs()).toBe(0);
+  });
+
+  it('never pauses without a fetch window (CLI commands)', () => {
+    const c = createFetchCoordinator({ config, runCycle: async () => okResult, now: () => at(3) });
+    expect(c.pauseRemainingMs()).toBe(0);
+    expect(c.triggerNow()).toEqual({ ok: true, mode: 'one-off' });
   });
 });

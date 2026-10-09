@@ -262,6 +262,52 @@ describe('#DetailWorker.drain', () => {
     });
   });
 
+  describe('night pause (fetch window)', () => {
+    const window = { from: 7, to: 23 };
+    const night = new Date(2026, 9, 2, 3, 0, 0).getTime();
+
+    it('does not start at night: no browser, no request, the listing stays pending', async () => {
+      addListing(1);
+      let clock = night;
+      const { options, launches, fetched } = setup({ now: () => clock });
+      const coordinator = createFetchCoordinator({
+        config: options.config,
+        runCycle: async () => ({}),
+        now: () => clock,
+        fetchWindow: () => window,
+      });
+      const nightWorker = createDetailWorker({ ...options, coordinator });
+      const result = await nightWorker.drain({ signal: new AbortController().signal });
+      expect(result).toMatchObject({ fetched: 0, stopped: 'night' });
+      expect(launches.n).toBe(0);
+      expect(fetched).toEqual([]);
+      expect(getListingByProviderId('1').details_status).toBe('pending');
+    });
+
+    it('stops between two requests when the window closes', async () => {
+      addListing(1, 1000);
+      addListing(2, 2000);
+      let clock = new Date(2026, 9, 2, 22, 59, 0).getTime();
+      const { options, fetched } = setup({ now: () => clock });
+      const coordinator = createFetchCoordinator({
+        config: options.config,
+        runCycle: async () => ({}),
+        now: () => clock,
+        fetchWindow: () => window,
+      });
+      const w = createDetailWorker({
+        ...options,
+        coordinator,
+        sleep: async () => {
+          clock += 2 * 60_000; // 23:01 after the pause between the requests
+        },
+      });
+      const result = await w.drain({ signal: new AbortController().signal });
+      expect(fetched).toHaveLength(1);
+      expect(result).toMatchObject({ fetched: 1, stopped: 'night' });
+    });
+  });
+
   describe('bot detection', () => {
     it('stops the worker, records the backoff and leaves the listing untouched', async () => {
       addListing(1, 1000);

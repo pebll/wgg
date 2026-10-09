@@ -208,10 +208,14 @@ export function describeLastFetch(lastFetch, now = Date.now()) {
   return `${formatRelativeTime(lastFetch.finishedAt, now)} (${parts.join(', ')})`;
 }
 
-/** Header text for the next fetch: "in 5 min (12:05)", "backing off: ...", "scheduler not running". */
+/** Header text for the next fetch: "in 5 min (12:05)", "backing off: ...", "07:00 (night pause)", "scheduler not running". */
 export function describeNextFetch(status, now = Date.now()) {
   if (!status) return 'unknown';
   if (!status.schedulerRunning || !has(status.nextFetchAt)) return 'scheduler not running';
+  // Night pause: nothing is fetched until the window of the users' Good alerts opens (see lib/scheduler/fetchWindow.js).
+  if (status.manualFetch?.nightPause && has(status.manualFetch.availableAt)) {
+    return `${formatClock(status.manualFetch.availableAt)} (night pause)`;
+  }
   const text = `${formatUntil(status.nextFetchAt, now)} (${formatClock(status.nextFetchAt)})`;
   return status.backoff ? `backing off: ${text}` : text;
 }
