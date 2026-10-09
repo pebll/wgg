@@ -280,3 +280,40 @@ function markPending(userId, providerId) {
     id: idOf(providerId),
   });
 }
+
+describe('#llm queue: only listings inside the details window are assessed (maxAgeDays)', () => {
+  const DAY = 86_400_000;
+  const WINDOW = { maxAgeDays: 7, now: NOW };
+  beforeEach(() => {
+    storeNewListings([6, 7].map(listing), SEARCH, NOW - 10 * DAY); // older than a week
+    [1, 2, 6, 7].forEach(fetched);
+  });
+
+  it('queues only fresh listings and marks older pending ones skipped "too old"', () => {
+    expect(selectLlmQueue({ userId: U, ...WINDOW }).map((r) => r.provider_id)).toEqual(['2', '1']);
+    expect(getUserListing(U, '6')).toMatchObject({ llm_status: 'skipped', llm_error: 'too old' });
+    expect(getUserListing(U, '7')).toMatchObject({ llm_status: 'skipped', llm_error: 'too old' });
+    expect(getUserListing(U, '1').llm_status).toBe('pending');
+  });
+
+  it('without a window nothing is filtered (CLI, tests)', () => {
+    expect(selectLlmQueue({ userId: U }).map((r) => r.provider_id)).toEqual(['2', '1', '7', '6']);
+  });
+
+  it('force and ids ignore the window', () => {
+    expect(selectLlmQueue({ userId: U, ids: ['6'], ...WINDOW }).map((r) => r.provider_id)).toEqual(['6']);
+    expect(selectLlmQueue({ userId: U, force: true, ...WINDOW }).map((r) => r.provider_id)).toContain('6');
+  });
+
+  it('the header count leaves out listings outside the window', () => {
+    expect(getLlmCounts(U, undefined, WINDOW).pending).toBe(2);
+    expect(getLlmCounts(U).pending).toBe(4);
+  });
+
+  it('done old listings are not re-queued by a settings change', () => {
+    recordLlmResult(U, idOf(6), { ...assessment, model: 'm', settingsHash: 'old' }, NOW);
+    expect(selectLlmQueue({ userId: U, settingsHash: 'new', ...WINDOW }).map((r) => r.provider_id)).toEqual(['2', '1']);
+    expect(getLlmCounts(U, 'new', WINDOW).pending).toBe(2);
+    expect(getUserListing(U, '6').llm_status).toBe('done');
+  });
+});

@@ -410,15 +410,28 @@ export function describeLlmModel(llm, now = Date.now()) {
 export function queueHelp() {
   return [
     'Details: wgg opens one offer page every 30–90 seconds (a polite pace), the best-scored offers first.',
-    'AI: the assessment of an offer starts right after its details are stored. Offers are assessed one at a time, for all users in turns, so your number can take a while to fall.',
+    'AI: the assessment of an offer starts right after its details are stored. Offers are assessed one at a time, for all users in turns, so your number can take a while to fall (the estimate in brackets uses the measured time per assessment). Only offers from the last days are assessed.',
     'The counts are your own: offers you cannot see, have hidden, or that your rules exclude are not counted, and neither are offers without a description.',
   ].join(' ');
+}
+
+const DEFAULT_LLM_SECONDS = 8; // one assessment of the free local model, until the server has measured it
+
+/** Seconds the user's AI backlog takes: the server's estimate (measured average, all users in turns), else 8 s each. */
+function llmEtaSeconds(llm) {
+  return has(llm.etaSeconds) ? llm.etaSeconds : llm.pending * DEFAULT_LLM_SECONDS;
+}
+
+/** "1 min", "21 min", "2 h" for a duration in seconds (rounded to whole minutes). */
+function formatEta(seconds) {
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return minutes < 120 ? `${minutes} min` : `${Math.round(minutes / 60)} h`;
 }
 
 /** Header summary of the LLM queue (/api/status.llm). */
 export function describeLlmQueue(llm) {
   if (!llm) return null;
-  const parts = [llm.pending > 0 ? `${llm.pending} pending` : 'up to date'];
+  const parts = [llm.pending > 0 ? `${llm.pending} pending (~${formatEta(llmEtaSeconds(llm))})` : 'up to date'];
   if (llm.failed > 0) parts.push(`${llm.failed} failed`);
   return parts.join(', ');
 }

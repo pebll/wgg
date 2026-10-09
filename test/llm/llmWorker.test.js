@@ -107,6 +107,17 @@ beforeEach(async () => {
 afterEach(() => Db.reset());
 
 describe('#llm worker', () => {
+  it('does not assess listings older than the details window: skipped "too old", no LLM call', async () => {
+    storeNewListings([listing(8)], SEARCH, NOW - 10 * 86_400_000);
+    storeListingDetails(id(8), page('Ein altes Inserat.'), NOW);
+    seed(1);
+    const { worker, prompts } = setup([reply()], { maxAgeDays: 7 });
+    const r = await worker.drain();
+    expect(r).toMatchObject({ done: 1, failed: 0 });
+    expect(prompts).toHaveLength(1);
+    expect(getUserListing(U, '8')).toMatchObject({ llm_status: 'skipped', llm_error: 'too old' });
+  });
+
   it('assesses queued listings serially, waits between calls, merges into the evaluation', async () => {
     seed(1);
     seed(2);

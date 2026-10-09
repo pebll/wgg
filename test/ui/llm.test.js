@@ -68,9 +68,14 @@ describe('#llm UI helpers', () => {
   });
 
   it('describeLlmQueue summarises the header numbers', () => {
-    expect(describeLlmQueue({ pending: 4, done: 2, failed: 0 })).toBe('4 pending');
+    expect(describeLlmQueue({ pending: 4, done: 2, failed: 0 })).toBe('4 pending (~1 min)');
     expect(describeLlmQueue({ pending: 0, done: 2, failed: 1 })).toBe('up to date, 1 failed');
     expect(describeLlmQueue(undefined)).toBeNull();
+    // the server's estimate (measured average, all users in turns) wins over the 8 s default
+    expect(describeLlmQueue({ pending: 159, done: 0, failed: 0, etaSeconds: 1272 })).toBe('159 pending (~21 min)');
+    expect(describeLlmQueue({ pending: 159, done: 0, failed: 0 })).toBe('159 pending (~21 min)');
+    expect(describeLlmQueue({ pending: 2, done: 0, failed: 0, etaSeconds: 40 })).toBe('2 pending (~1 min)');
+    expect(describeLlmQueue({ pending: 600, done: 0, failed: 0, etaSeconds: 7200 })).toBe('600 pending (~2 h)');
   });
 
   it('the llm parameter appears in the score breakdown like the others', () => {

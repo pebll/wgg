@@ -162,7 +162,7 @@ describe('#startServer', () => {
       manualFetch: null, // no coordinator in this process
       // the fixture listings are from 1970: too old for details, so nothing is pending
       details: { pending: 0, fetched: 0, failed: 0, running: false, nextAt: null },
-      llm: { pending: 0, done: 0, failed: 0, badgeThreshold: 0.3 },
+      llm: { pending: 0, done: 0, failed: 0, avgSeconds: null, etaSeconds: 0, badgeThreshold: 0.3 },
     });
   });
 
@@ -182,7 +182,14 @@ describe('#startServer', () => {
     await withWorker.close();
     expect(body.details).toEqual({ pending: 2, fetched: 1, failed: 0, running: true, nextAt: now + 45_000 });
     // listing 10 has details but no LLM result yet
-    expect(body.llm).toEqual({ pending: 1, done: 0, failed: 0, badgeThreshold: 0.3 });
+    expect(body.llm).toEqual({
+      pending: 1,
+      done: 0,
+      failed: 0,
+      avgSeconds: null,
+      etaSeconds: 8,
+      badgeThreshold: 0.3,
+    });
   });
 
   it('GET /api/status reports the configured badge threshold', async () => {
